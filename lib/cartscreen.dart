@@ -9,7 +9,6 @@ import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:waiter_app/billItem.dart';
 import 'package:waiter_app/cartprovider.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:waiter_app/dashboardscreen.dart';
 import 'package:waiter_app/utils/apphelper.dart';
 import 'package:waiter_app/utils/appstring.dart';
@@ -34,225 +33,6 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   FlutterBluePlus flutterBlue = FlutterBluePlus();
-
-  // Future<void> _postCartData(BuildContext context) async {
-  //   final cartProvider = Provider.of<CartProvider>(context, listen: false);
-  //   final selectedItems = cartProvider.cartItems;
-
-  //   debugPrint("Starting _postCartData...");
-
-  //   if (selectedItems.isEmpty) {
-  //     debugPrint("Cart is empty. Aborting request.");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Cart is empty!")),
-  //     );
-  //     return;
-  //   }
-
-  //   // Retrieve logged-in waiter name from SharedPreferences
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final waiterName = prefs.getString("wname") ?? "Unknown";
-  //   debugPrint("Logged-in waiter: $waiterName");
-
-  //   // Determine kottype value based on selected order type
-  //   int kottype = 0;
-  //   if (cartProvider.selectedOption == "Table") {
-  //     kottype = cartProvider.selectedTableId != null ? 0 : 1;
-  //   } else if (cartProvider.selectedOption == "Delivery") {
-  //     kottype = 2;
-  //   } else if (cartProvider.selectedOption == "Takeaway") {
-  //     kottype = 3;
-  //   }
-  //   debugPrint("Order type: ${cartProvider.selectedOption}, kottype: $kottype");
-
-  //   // Construct API request body
-  //   List<Map<String, dynamic>> orderItems = selectedItems.map((item) {
-  //     int quantity = cartProvider.itemCounts[item['id']] ?? 1;
-
-  //     final itemData = {
-  //       "rawcode": item['id'],
-  //       "itname": item['itname'],
-  //       "barcode": item['barcode'] ?? "0000",
-  //       "discperc": 0,
-  //       "qty": quantity,
-  //       "rate": item['restrate'] ?? 0,
-  //       "gst": 5,
-  //       "cess": 0,
-  //       "itcomment": "",
-  //       "isdiscountable": 0,
-  //       "id": "",
-  //       "shopid": widget.responseData[0]['shopid'],
-  //       "kdsstatus": 1,
-  //       "timeotp": DateTime.now().millisecondsSinceEpoch.toString(),
-  //       "kottime":
-  //           "${TimeOfDay.now().hour}:${TimeOfDay.now().minute} ${TimeOfDay.now().period == DayPeriod.am ? 'AM' : 'PM'}",
-  //       "tablecode": cartProvider.selectedOption == "Table"
-  //           ? cartProvider.selectedTableId
-  //           : 0,
-  //       "tablename": cartProvider.selectedOption == "Table"
-  //           ? cartProvider.selectedTableName ?? "Unknown"
-  //           : "None",
-  //       "ordertype": cartProvider.selectedOption ?? "None",
-  //       "wcode": widget.responseData[0]['id'],
-  //       "wname": widget.responseData[0]['wname'],
-  //       "nop": 1,
-  //       "kottype": kottype,
-  //       "bltype": 0,
-  //       "discamt": 0,
-  //       "bldiscperc": 0,
-  //       "bldiscamt": 0,
-  //       "taxableamt": (item['restrate'] ?? 0) * quantity,
-  //       "gstamt": (item['restrate'] ?? 0) * quantity * 0.05,
-  //       "cessamt": 0,
-  //       "servicechperc": 12,
-  //       "servicechamt": (item['restrate'] ?? 0) * quantity * 0.12,
-  //       "ittotal": ((item['restrate'] ?? 0) * quantity * 1.17).round(),
-  //       "totqty": quantity,
-  //       "totaltaxableamt":
-  //           ((item['restrate'] ?? 0) * quantity).toStringAsFixed(2),
-  //       "totgst":
-  //           ((item['restrate'] ?? 0) * quantity * 0.05).toStringAsFixed(2),
-  //       "totcess": "0.00",
-  //       "totdiscamt": "0.00",
-  //       "totbldiscamt": "0.00",
-  //       "totalservicechamt":
-  //           ((item['restrate'] ?? 0) * quantity * 0.12).toStringAsFixed(2),
-  //       "roundoff": "0.00",
-  //       "totblamt": ((item['restrate'] ?? 0) * quantity * 1.17).round(),
-  //       "totordamt": ((item['restrate'] ?? 0) * quantity * 1.05).round(),
-  //     };
-
-  //     debugPrint("Item added to order: ${jsonEncode(itemData)}");
-  //     return itemData;
-  //   }).toList();
-
-  //   final url = Uri.parse("https://hotelserver.billhost.co.in/DineinKOT");
-  //   debugPrint("API URL: $url");
-
-  //   // try {
-  //   //   debugPrint("Sending order data to server...");
-  //   //   final response = await http.post(
-  //   //     url,
-  //   //     headers: {"Content-Type": "application/json"},
-  //   //     body: jsonEncode(orderItems),
-  //   //   );
-
-  //   //   debugPrint("Response status: ${response.statusCode}");
-  //   //   debugPrint("Response body: ${response.body}");
-
-  //   //   if (response.statusCode == 200) {
-  //   //     debugPrint("Order placed successfully!");
-  //   //     ScaffoldMessenger.of(context).showSnackBar(
-  //   //       const SnackBar(content: Text("Order placed successfully!")),
-  //   //     );
-  //   //     cartProvider.clearCart();
-  //   //     // ✅ Navigate to DashboardScreen after successful order
-  //   //     Navigator.pushReplacement(
-  //   //       context,
-  //   //       MaterialPageRoute(
-  //   //         builder: (context) => DashBoardScreen(
-  //   //           responseData: widget.responseData, // Pass the required data
-  //   //           itemCounts:
-  //   //               widget.itemCounts, // Ensure you pass the correct state data
-  //   //           menuItems:
-  //   //               widget.menuItems, // Ensure you pass the correct menu items
-  //   //           selectedOption: widget.selectedOption, // Pass selected option
-  //   //         ),
-  //   //       ),
-  //   //     );
-  //   //   } else {
-  //   //     debugPrint("Failed to place order: ${response.body}");
-  //   //     ScaffoldMessenger.of(context).showSnackBar(
-  //   //       SnackBar(content: Text("Failed to place order: ${response.body}")),
-  //   //     );
-  //   //   }
-  //   // } catch (e) {
-  //   //   debugPrint("Error placing order: $e");
-  //   //   ScaffoldMessenger.of(context).showSnackBar(
-  //   //     SnackBar(content: Text("Error: $e")),
-  //   //   );
-  //   // }
-
-  //   try {
-  //     debugPrint("Sending order data to server...");
-  //     final response = await http.post(
-  //       url,
-  //       headers: {"Content-Type": "application/json"},
-  //       body: jsonEncode(orderItems),
-  //     );
-
-  //     debugPrint("Response status: ${response.statusCode}");
-  //     debugPrint("Response body: ${response.body}");
-
-  //     if (response.statusCode == 200) {
-  //       final responseData = jsonDecode(response.body);
-
-  //       // Extracting KOT Number from Response (Assuming response contains "kot_no")
-  //       String kotNo = responseData['kot_no']?.toString() ?? "N/A";
-  //       debugPrint("Extracted KOT No: $kotNo");
-
-  //       debugPrint("Order placed successfully!");
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("Order placed successfully! KOT No: $kotNo")),
-  //       );
-
-  //       // ✅ CHECK IF PRINTER TYPE IS BLUETOOTH AND A DEVICE IS CONNECTED
-  //       if (Apphelper.printerType == Appstring.bluetoothPrinter &&
-  //           Apphelper.connectedDevice != null) {
-  //         await printFormattedBill(
-  //           Apphelper.connectedDevice!, // Use the selected Bluetooth printer
-  //           cartProvider.selectedOption ?? "N/A",
-  //           "Your Restaurant Name", // Replace with actual estaurant name
-  //           "Main Kitchen", // Customize kitchen name
-  //           kotNo, // Pass the KOT number
-  //           cartProvider.selectedTableId?.toString() ?? "N/A",
-  //           "${TimeOfDay.now().hour}:${TimeOfDay.now().minute} ${TimeOfDay.now().period == DayPeriod.am ? 'AM' : 'PM'}",
-  //           // "${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}",
-  //           "${DateTime.now().day.toString().padLeft(2, '0')}/"
-  //               "${DateTime.now().month.toString().padLeft(2, '0')}/"
-  //               "${(DateTime.now().year % 100).toString().padLeft(2, '0')}", // Date
-  //           waiterName,
-  //           "1", // Assuming one person for now
-  //           cartProvider.cartItems
-  //               .map((item) => BillItem(
-  //                     serialNo: item['id'],
-  //                     name: item['itname'],
-  //                     quantity: cartProvider.itemCounts[item['id']] ?? 1,
-  //                   ))
-  //               .toList(),
-  //         );
-  //       } else {
-  //         debugPrint(
-  //             "No Bluetooth printer connected or incorrect printer type.");
-  //       }
-
-  //       // ✅ Navigate to DashboardScreen after successful order
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) => DashBoardScreen(
-  //             responseData: widget.responseData,
-  //             itemCounts: widget.itemCounts,
-  //             menuItems: widget.menuItems,
-  //             selectedOption: widget.selectedOption,
-  //           ),
-  //         ),
-  //       );
-  //     } else {
-  //       debugPrint("Failed to place order: ${response.body}");
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("Failed to place order: ${response.body}")),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error placing order: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Error: $e")),
-  //     );
-  //   }
-
-  //   debugPrint("Finished _postCartData.");
-  // }
 
   Future<void> _postCartData(BuildContext context) async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
@@ -369,7 +149,7 @@ class _CartScreenState extends State<CartScreen> {
           const SnackBar(content: Text("Order placed successfully!")),
         );
         cartProvider.clearCart();
-        // ✅ Navigate to DashboardScreen after successful order
+        //  Navigate to DashboardScreen after successful order
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -416,7 +196,7 @@ class _CartScreenState extends State<CartScreen> {
     final selectedPrinterType = prefs.getString("printer_type") ??
         "USB Printer"; // Retrieve stored printer type
 
-    // ✅ Cache the values immediately
+    //  Cache the values immediately
     final selectedOption = cartProvider.selectedOption ?? "None";
     final selectedTableId = cartProvider.selectedTableId ?? 0;
     final selectedTableName = cartProvider.selectedTableName ?? "None";
@@ -552,7 +332,7 @@ class _CartScreenState extends State<CartScreen> {
                 orderItemsfinal);
           }
         }
-        // ✅ Navigate to DashboardScreen after successful order and print
+        //  Navigate to DashboardScreen after successful order and print
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -577,456 +357,6 @@ class _CartScreenState extends State<CartScreen> {
       );
     }
   }
-
-  // Future<void> _postCartDataprintandorder(BuildContext context) async {
-  //   final cartProvider = Provider.of<CartProvider>(context, listen: false);
-  //   final selectedItems = cartProvider.cartItems;
-
-  //   if (selectedItems.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Cart is empty!")),
-  //     );
-  //     return;
-  //   }
-
-  //   // Retrieve logged-in waiter name from SharedPreferences
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final waiterName = prefs.getString("wname") ?? "Unknown";
-  //   final selectedPrinterType =
-  //       prefs.getString("printer_type") ?? "USB Printer";
-
-  //   final selectedOption = cartProvider.selectedOption ?? "None";
-  //   final selectedTableId = cartProvider.selectedTableId ?? 0;
-  //   final selectedTableName = cartProvider.selectedTableName ?? "None";
-
-  //   // Determine KOT type based on order type
-  //   int kottype = 0; // Default for 'Table'
-  //   if (selectedOption == "Table") {
-  //     kottype = selectedTableId != 0 ? 0 : 1;
-  //   } else if (selectedOption == "Delivery") {
-  //     kottype = 2;
-  //   } else if (selectedOption == "Takeaway") {
-  //     kottype = 3;
-  //   }
-
-  //   // Construct API request body
-  //   List<Map<String, dynamic>> orderItems = selectedItems.map((item) {
-  //     int quantity = cartProvider.itemCounts[item['id']] ?? 1;
-  //     double rate = item['restrate'] ?? 0;
-  //     double gstAmount = rate * quantity * 0.05;
-  //     double serviceCharge = rate * quantity * 0.12;
-  //     double totalAmount = rate * quantity * 1.17;
-
-  //     return {
-  //       "rawcode": item['id'],
-  //       "itname": item['itname'],
-  //       "barcode": item['barcode'] ?? "0000",
-  //       "discperc": 0,
-  //       "qty": quantity,
-  //       "rate": rate,
-  //       "gst": 5,
-  //       "cess": 0,
-  //       "itcomment": "",
-  //       "isdiscountable": 0,
-  //       "id": "",
-  //       "shopid": widget.responseData[0]['shopid'],
-  //       "kdsstatus": 1,
-  //       "timeotp": DateTime.now().millisecondsSinceEpoch.toString(),
-  //       "kottime":
-  //           "${TimeOfDay.now().hour}:${TimeOfDay.now().minute} ${TimeOfDay.now().period == DayPeriod.am ? 'AM' : 'PM'}",
-  //       "tablecode": kottype == 0 ? selectedTableId : 0,
-  //       "tablename": kottype == 0 ? selectedTableName : "None",
-  //       "ordertype": selectedOption,
-  //       "wcode": widget.responseData[0]['id'],
-  //       "wname": waiterName,
-  //       "nop": 1,
-  //       "kottype": kottype,
-  //       "bltype": 0,
-  //       "discamt": 0,
-  //       "bldiscperc": 0,
-  //       "bldiscamt": 0,
-  //       "taxableamt": rate * quantity,
-  //       "gstamt": gstAmount,
-  //       "cessamt": 0,
-  //       "servicechperc": 12,
-  //       "servicechamt": serviceCharge,
-  //       "ittotal": totalAmount.round(),
-  //       "totqty": quantity,
-  //       "totaltaxableamt": (rate * quantity).toStringAsFixed(2),
-  //       "totgst": gstAmount.toStringAsFixed(2),
-  //       "totcess": "0.00",
-  //       "totdiscamt": "0.00",
-  //       "totbldiscamt": "0.00",
-  //       "totalservicechamt": serviceCharge.toStringAsFixed(2),
-  //       "roundoff": "0.00",
-  //       "totblamt": totalAmount.round(),
-  //       "ittotal": totalAmount.round(),
-  //     };
-  //   }).toList();
-
-  //   final url = Uri.parse("https://hotelserver.billhost.co.in/DineinKOT");
-
-  //   try {
-  //     final response = await http.post(
-  //       url,
-  //       headers: {"Content-Type": "application/json"},
-  //       body: jsonEncode(orderItems),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       // Parse the API response to extract `Kot No`
-  //       final responseData = jsonDecode(response.body);
-  //       final kotNo = responseData["kotno"]?.toString() ??
-  //           "Unknown"; // Ensure kotNo is string
-
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Order placed successfully!")),
-  //       );
-  //       cartProvider.clearCart();
-
-  //       List<BillItem> orderItemsFinal = [];
-  //       for (int i = 0; i < orderItems.length; i++) {
-  //         orderItemsFinal.add(
-  //           BillItem(
-  //               serialNo: i + 1,
-  //               name: orderItems[i]['itname'] ?? "Unknown",
-  //               quantity: orderItems[i]['qty'] ?? 0),
-  //         );
-  //       }
-
-  //       // Print using Bluetooth Printer if selected
-  //       if (Apphelper.printerType == Appstring.bluetoothPrinter) {
-  //         if (Apphelper.connectedDevice != null) {
-  //           await printFormattedBill(
-  //               Apphelper.connectedDevice!,
-  //               "Dine-in",
-  //               "Crossrug",
-  //               "Main",
-  //               kotNo, // Pass extracted Kot No
-  //               selectedTableName,
-  //               "${TimeOfDay.now().hour}:${TimeOfDay.now().minute} ${TimeOfDay.now().period == DayPeriod.am ? 'AM' : 'PM'}",
-  //               "${DateTime.now().day.toString().padLeft(2, '0')}/"
-  //                   "${DateTime.now().month.toString().padLeft(2, '0')}/"
-  //                   "${(DateTime.now().year % 100).toString().padLeft(2, '0')}",
-  //               waiterName,
-  //               "1", // Number of persons
-  //               orderItemsFinal);
-  //         }
-  //       }
-
-  //       // ✅ Navigate to DashboardScreen after successful order
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) => DashBoardScreen(
-  //             responseData: widget.responseData,
-  //             itemCounts: widget.itemCounts,
-  //             menuItems: widget.menuItems,
-  //             selectedOption: widget.selectedOption,
-  //           ),
-  //         ),
-  //       );
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("Failed to place order: ${response.body}")),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Error: $e")),
-  //     );
-  //   }
-  // }
-
-  Future<void> _printReceipt(
-    List<Map<String, dynamic>> orderItems,
-    int? kottype,
-    String waiterName,
-    String? orderType,
-    String? tableName,
-    String printerType,
-  ) async {
-    final pdf = pw.Document();
-    final displayOrderType = orderType ?? "Not specified";
-    final displayTableName = tableName ?? "None";
-
-    // pdf.addPage(
-    //   pw.Page(
-    //     pageFormat: PdfPageFormat.roll80,
-    //     build: (pw.Context context) {
-    //       return pw.Column(
-    //         crossAxisAlignment: pw.CrossAxisAlignment.center,
-    //         children: [
-    //           pw.Text("Dine-in",
-    //               style: pw.TextStyle(
-    //                   fontSize: 10, fontWeight: pw.FontWeight.bold)),
-    //           pw.SizedBox(height: 2),
-    //           pw.Text("Crossrug",
-    //               style: pw.TextStyle(
-    //                   fontSize: 14, fontWeight: pw.FontWeight.bold)),
-    //           pw.SizedBox(height: 5),
-    //           pw.Divider(thickness: 1),
-    //           pw.Row(
-    //             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-    //             children: [
-    //               pw.Text("Kitchen : MAIN", style: pw.TextStyle(fontSize: 8)),
-    //               pw.Text("Table : $displayTableName",
-    //                   style: pw.TextStyle(fontSize: 8)),
-    //             ],
-    //           ),
-    //           pw.Row(
-    //             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-    //             children: [
-    //               pw.Text("Kot No : 294", style: pw.TextStyle(fontSize: 8)),
-    //               pw.Text(
-    //                   "Date : ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
-    //                   style: pw.TextStyle(fontSize: 8)),
-    //             ],
-    //           ),
-    //           pw.Row(
-    //             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-    //             children: [
-    //               pw.Text("Waiter: $waiterName",
-    //                   style: pw.TextStyle(fontSize: 8)),
-    //             ],
-    //           ),
-    //           pw.Divider(thickness: 1),
-    //           pw.ListView.builder(
-    //             itemCount: orderItems.length,
-    //             itemBuilder: (context, index) {
-    //               final item = orderItems[index];
-    //               return pw.Row(
-    //                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-    //                 children: [
-    //                   pw.Text("${index + 1}", style: pw.TextStyle(fontSize: 8)),
-    //                   pw.Text(item["itname"] ?? "Unknown",
-    //                       style: pw.TextStyle(fontSize: 8)),
-    //                   pw.Text("${item["qty"]}",
-    //                       style: pw.TextStyle(fontSize: 8)),
-    //                 ],
-    //               );
-    //             },
-    //           ),
-    //           pw.Divider(thickness: 1),
-    //           pw.Row(
-    //             mainAxisAlignment: pw.MainAxisAlignment.end,
-    //             children: [
-    //               pw.Text(
-    //                   "Total Qty : ${orderItems.fold<int>(0, (sum, item) => sum + (item["qty"] as int))}",
-    //                   style: pw.TextStyle(
-    //                       fontSize: 10, fontWeight: pw.FontWeight.bold)),
-    //             ],
-    //           ),
-    //         ],
-    //       );
-    //     },
-    //   ),
-    // );
-
-    Uint8List pdfBytes = await pdf.save(); // Convert PDF to bytes
-
-    // if (printerType == "USB Printer") {
-    //   await Printing.layoutPdf(
-    //       onLayout: (PdfPageFormat format) async => pdfBytes);
-    // } else if (printerType == "Bluetooth Printer" && connectedDevice != null) {
-    //   await printText(connectedDevice!, pdfBytes);
-    // }
-  }
-
-  // Future<void> _printReceipt(
-  //     List<Map<String, dynamic>> orderItems,
-  //     int? kottype,
-  //     String waiterName,
-  //     String? orderType,
-  //     String? tableName,
-  //     String printerType) async {
-  //   final pdf = pw.Document();
-  //   final displayOrderType = orderType ?? "Not specified";
-  //   final displayTableName = tableName ?? "None";
-  //   double grandTotal =
-  //       orderItems.fold(0, (sum, item) => sum + (item["ittotal"] ?? 0));
-
-  //   pdf.addPage(pw.Page(
-  //     pageFormat: PdfPageFormat.roll80,
-  //     build: (pw.Context context) {
-  //       return pw.Column(
-  //         crossAxisAlignment: pw.CrossAxisAlignment.center,
-  //         children: [
-  //           pw.Text("Dine-in",
-  //               style:
-  //                   pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-  //           pw.SizedBox(height: 2),
-  //           pw.Text("Crossrug",
-  //               style:
-  //                   pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-  //           pw.SizedBox(height: 5),
-  //           pw.Divider(thickness: 1),
-  //           pw.Row(
-  //             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               pw.Text("Kitchen : MAIN", style: pw.TextStyle(fontSize: 8)),
-  //               pw.Text("Table : $displayTableName",
-  //                   style: pw.TextStyle(fontSize: 8)),
-  //             ],
-  //           ),
-  //           pw.Row(
-  //             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               pw.Text("Kot No : 294", style: pw.TextStyle(fontSize: 8)),
-  //               pw.Text(
-  //                   "Date : ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
-  //                   style: pw.TextStyle(fontSize: 8)),
-  //             ],
-  //           ),
-  //           pw.Row(
-  //             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               pw.Text("Waiter: $waiterName",
-  //                   style: pw.TextStyle(fontSize: 8)),
-  //             ],
-  //           ),
-  //           pw.Divider(thickness: 1),
-  //           pw.ListView.builder(
-  //             itemCount: orderItems.length,
-  //             itemBuilder: (context, index) {
-  //               final item = orderItems[index];
-  //               return pw.Row(
-  //                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  //                 children: [
-  //                   pw.Text("${index + 1}", style: pw.TextStyle(fontSize: 8)),
-  //                   pw.Text(item["itname"] ?? "Unknown",
-  //                       style: pw.TextStyle(fontSize: 8)),
-  //                   pw.Text("${item["qty"]}", style: pw.TextStyle(fontSize: 8)),
-  //                 ],
-  //               );
-  //             },
-  //           ),
-  //           pw.Divider(thickness: 1),
-  //           pw.Row(
-  //             mainAxisAlignment: pw.MainAxisAlignment.end,
-  //             children: [
-  //               pw.Text(
-  //                   "Total Qty : ${orderItems.fold<int>(0, (sum, item) => sum + (item["qty"] as int))}",
-  //                   style: pw.TextStyle(
-  //                       fontSize: 10, fontWeight: pw.FontWeight.bold)),
-  //             ],
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   ));
-  //   //  sendPrintData();
-  //   //   if (printerType == "USB Printer") {
-  //   //     await Printing.layoutPdf(
-  //   //         onLayout: (PdfPageFormat format) async => pdf.save());
-  //   //   } else if (printerType == "Bluetooth Printer") {
-  //   //     // Implement Bluetooth printing logic
-  //   //     // sendPrintData();
-  //   //     await Printing.layoutPdf(
-  //   //         onLayout: (PdfPageFormat format) async => pdf.save());
-  //   //     // For real Bluetooth printing, integrate a Flutter Bluetooth printing package like `flutter_blue` or `esc_pos_printer`
-  //   //   }
-
-  //   Uint8List pdfBytes = await pdf.save(); // Convert PDF to bytes
-
-  //   if (printerType == "USB Printer") {
-  //     await Printing.layoutPdf(
-  //         onLayout: (PdfPageFormat format) async => pdfBytes);
-  //   } else if (printerType == "Bluetooth Printer" && connectedDevice != null) {
-  //     await _sendToBluetoothPrinter(connectedDevice!, pdfBytes);
-  //   }
-  // }
-
-//   Future<void> printFormattedBill(
-//       BluetoothDevice printer,
-//       String orderType, // Dine-in, Takeaway, etc.
-//       String restaurantName,
-//       String kitchen,
-//       String kotNo,
-//       String tableNo,
-//       String dateTime,
-//       String waiterName,
-//       String numOfPersons,
-//       List<BillItem> items) async {
-//     try {
-//       await printer.connect();
-//       List<BluetoothService> services = await printer.discoverServices();
-
-//       // ESC/POS Commands for formatting
-//       List<int> escPosCommands = [];
-
-//       // Order Type (e.g., "Dine-in")
-//       escPosCommands.addAll([0x1B, 0x61, 0x01]); // Center alignment
-//       escPosCommands.addAll([0x1B, 0x45, 0x01]); // Bold ON
-//       escPosCommands.addAll(utf8.encode("$orderType\n"));
-//       escPosCommands.addAll([0x1B, 0x45, 0x00]); // Bold OFF
-//       escPosCommands.addAll([0x1B, 0x61, 0x00]); // Left alignment
-
-//       // Bold & Centered Restaurant Name
-//       escPosCommands.addAll([0x1B, 0x61, 0x01]); // Center alignment
-//       escPosCommands.addAll([0x1B, 0x45, 0x01]); // Bold ON
-//       escPosCommands.addAll(utf8.encode("${restaurantName.toUpperCase()}\n"));
-//       escPosCommands.addAll([0x1B, 0x45, 0x00]); // Bold OFF
-//       escPosCommands.addAll([0x1B, 0x61, 0x00]); // Left alignment
-
-//       // Header Information
-//       escPosCommands.addAll(utf8.encode("""
-// --------------------------------
-// Kitchen : $kitchen
-// --------------------------------
-// Kot No : $kotNo         Table : $tableNo
-// Time : $dateTime
-// Waiter : $waiterName    NOP : $numOfPersons
-// --------------------------------
-// SN Item Name                 QTY
-// --------------------------------
-// """));
-
-//       // Formatting item list dynamically
-//       double totalQty = 0;
-//       for (var item in items) {
-//         totalQty += item.quantity;
-//         escPosCommands.addAll(utf8.encode(
-//             "${item.serialNo.toString().padRight(4)} ${item.name.padRight(18)} ${item.quantity.toStringAsFixed(2).padLeft(5)}\n"));
-//       }
-
-//       // Footer
-//       escPosCommands.addAll(utf8.encode("""
-// --------------------------------
-//                   Total : ${totalQty.toStringAsFixed(2)}
-// \n\n\n
-// """));
-
-// // **Cut Paper Command**
-//       escPosCommands.addAll([0x1D, 0x56, 0x00]); // Full cut
-
-//       // Convert to Uint8List for Bluetooth printing
-//       Uint8List printData = Uint8List.fromList(escPosCommands);
-
-//       for (var service in services) {
-//         for (var characteristic in service.characteristics) {
-//           if (characteristic.properties.write) {
-//             int chunkSize = 237; // Bluetooth buffer limit
-
-//             for (int i = 0; i < printData.length; i += chunkSize) {
-//               int end = (i + chunkSize < printData.length)
-//                   ? i + chunkSize
-//                   : printData.length;
-//               await characteristic.write(printData.sublist(i, end),
-//                   withoutResponse: true);
-//               await Future.delayed(
-//                   Duration(milliseconds: 50)); // Prevents buffer overflow
-//             }
-
-//             print("Formatted Bill printed successfully.");
-//             return;
-//           }
-//         }
-//       }
-//     } catch (e) {
-//       print("Bluetooth printing error: $e");
-//     }
-//   }
 
 // 3 inch paper
 
@@ -1129,11 +459,8 @@ SN  Item Name                               QTY
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
     });
-
     super.initState();
   }
-
-  //"ordertype": cartProvider.selectedOption ?? "None",
 
   @override
   Widget build(BuildContext context) {
@@ -1159,27 +486,27 @@ SN  Item Name                               QTY
           ),
           child: Padding(
             padding: EdgeInsets.only(
-              top: 20.0,
+              top: 5.0,
               left: 10.0,
               right: 10.0,
-              bottom: 30.0,
+              bottom: 20.0,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ✅ Display Selected Order Type
+                // Display Selected Order Type
                 Text(
-                  "Order type: ${cartProvider.selectedOption ?? "None"}",
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                  "Order type : ${cartProvider.selectedOption ?? "None"}",
+                  style:
+                      TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                 ),
                 if (cartProvider.selectedOption == "Table") // Show Table Name
                   Padding(
                     padding: const EdgeInsets.only(top: 5.0),
                     child: Text(
                       "Table No. : ${cartProvider.selectedTableName ?? "None"}",
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 16.sp, fontWeight: FontWeight.bold),
                     ),
                   ),
                 SizedBox(height: 1.h),
@@ -1271,7 +598,7 @@ SN  Item Name                               QTY
                                             backgroundColor: Colors.red,
                                           ),
                                           child: Icon(Icons.remove,
-                                              color: Colors.white, size: 14.sp),
+                                              color: Colors.white, size: 16.sp),
                                         ),
                                         Padding(
                                           padding: EdgeInsets.symmetric(
@@ -1279,7 +606,7 @@ SN  Item Name                               QTY
                                           child: Text(
                                             quantity.toString(),
                                             style: TextStyle(
-                                                fontSize: 14.sp,
+                                                fontSize: 16.sp,
                                                 fontWeight: FontWeight.bold),
                                           ),
                                         ),
@@ -1309,7 +636,7 @@ SN  Item Name                               QTY
                 ),
 
                 Padding(
-                  padding: EdgeInsets.all(0.h),
+                  padding: EdgeInsets.only(top: 2.h),
                   child: Row(
                     children: [
                       Expanded(
@@ -1361,7 +688,6 @@ SN  Item Name                               QTY
                                 return;
                               }
                               _postCartDataprintandorder(context);
-                              // print("Print and Order button pressed");
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
@@ -1381,200 +707,7 @@ SN  Item Name                               QTY
                 ),
               ],
             ),
-          )
-
-          // Padding(
-          //   padding: EdgeInsets.only(
-          //     top: 20.0,
-          //     left: 10.0,
-          //     right: 10.0,
-          //     bottom: 30.0,
-          //   ),
-          //   child: Column(
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     children: [
-          //       // ✅ Display Selected Order Type
-          //       Text(
-          //         "Order type: ${cartProvider.selectedOption ?? "None"}",
-          //         style:
-          //             const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          //       ),
-          //       if (cartProvider.selectedOption == "Table") // Show Table Name
-          //         Padding(
-          //           padding: const EdgeInsets.only(top: 5.0),
-          //           child: Text(
-          //             "Table No. : ${cartProvider.selectedTableName ?? "None"}",
-          //             style: const TextStyle(
-          //                 fontSize: 16, fontWeight: FontWeight.bold),
-          //           ),
-          //         ),
-          //       SizedBox(height: 1.h),
-
-          //       if (Apphelper.printerType == Appstring.bluetoothPrinter)
-          //         if (Apphelper.connectedDevice != null)
-          //           Text(Apphelper.connectedDevice!.platformName.toString()),
-
-          //       // Display Cart Items
-          //       Expanded(
-          //         child: selectedItems.isEmpty
-          //             ? const Center(
-          //                 child: Text(
-          //                   "No items in cart",
-          //                   style: TextStyle(
-          //                       fontSize: 16, fontWeight: FontWeight.bold),
-          //                 ),
-          //               )
-          //             : ListView.builder(
-          //                 itemCount: selectedItems.length,
-          //                 itemBuilder: (context, index) {
-          //                   final item = selectedItems[index];
-          //                   final quantity =
-          //                       cartProvider.itemCounts[item['id']] ?? 0;
-
-          //                   return Card(
-          //                     elevation: 3,
-          //                     color: Colors.white,
-          //                     child: Padding(
-          //                       padding: const EdgeInsets.all(10.0),
-          //                       child: Row(
-          //                         mainAxisAlignment:
-          //                             MainAxisAlignment.spaceBetween,
-          //                         children: [
-          //                           Column(
-          //                             crossAxisAlignment:
-          //                                 CrossAxisAlignment.start,
-          //                             children: [
-          //                               Text(
-          //                                 item['itname'].toString(),
-          //                                 style: TextStyle(
-          //                                     fontSize: 14.sp,
-          //                                     fontWeight: FontWeight.w700),
-          //                               ),
-          //                               Text(
-          //                                 "Price: ₹${item['restrate'].toString()}",
-          //                                 style: TextStyle(
-          //                                   fontSize: 14.sp,
-          //                                   color: Colors.black,
-          //                                 ),
-          //                               ),
-          //                             ],
-          //                           ),
-          //                           Row(
-          //                             children: [
-          //                               ElevatedButton(
-          //                                 onPressed: () =>
-          //                                     cartProvider.removeFromCart(item),
-          //                                 style: ElevatedButton.styleFrom(
-          //                                   shape: RoundedRectangleBorder(
-          //                                     borderRadius: BorderRadius.circular(
-          //                                         12), // Rounded rectangle shape
-          //                                   ),
-          //                                   padding: EdgeInsets
-          //                                       .zero, // Removes extra padding
-          //                                   minimumSize: const Size(
-          //                                       30, 30), // Sets fixed size
-          //                                   backgroundColor: Colors.red,
-          //                                 ),
-          //                                 child: Icon(Icons.remove,
-          //                                     color: Colors.white, size: 16.sp),
-          //                               ),
-          //                               Padding(
-          //                                 padding: const EdgeInsets.symmetric(
-          //                                     horizontal: 8.0),
-          //                                 child: Text(
-          //                                   quantity.toString(),
-          //                                   style: TextStyle(
-          //                                       fontSize: 16.sp,
-          //                                       fontWeight: FontWeight.bold),
-          //                                 ),
-          //                               ),
-          //                               ElevatedButton(
-          //                                 onPressed: () =>
-          //                                     cartProvider.addToCart(item),
-          //                                 style: ElevatedButton.styleFrom(
-          //                                   shape: RoundedRectangleBorder(
-          //                                     borderRadius: BorderRadius.circular(
-          //                                         12), // Rounded rectangle shape
-          //                                   ),
-          //                                   padding: EdgeInsets.zero,
-          //                                   minimumSize: const Size(30, 30),
-          //                                   backgroundColor: Colors.green,
-          //                                 ),
-          //                                 child: Icon(Icons.add,
-          //                                     color: Colors.white, size: 16.sp),
-          //                               ),
-          //                             ],
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   );
-          //                 },
-          //               ),
-          //       ),
-
-          //       Padding(
-          //         padding: EdgeInsets.all(
-          //             0.h), // Assuming 'h' is defined for responsive height
-          //         child: Row(
-          //           // Use Row to place buttons horizontally
-          //           children: [
-          //             Expanded(
-          //               // Use Expanded to make the first button take available space
-          //               child: SizedBox(
-          //                 child: ElevatedButton(
-          //                   onPressed: () => _postCartData(context),
-          //                   style: ElevatedButton.styleFrom(
-          //                     backgroundColor: Colors.black,
-          //                     foregroundColor: Colors.white,
-          //                     padding: EdgeInsets.symmetric(
-          //                         vertical: 1.h), // Assuming 'h' is defined
-          //                     textStyle: TextStyle(
-          //                       fontSize: 16
-          //                           .sp, // Assuming 'sp' is defined for responsive font size
-          //                       fontWeight: FontWeight.bold,
-          //                     ),
-          //                   ),
-          //                   child: Text("Proceed to Order"),
-          //                 ),
-          //               ),
-          //             ),
-          //             SizedBox(width: 5.w),
-
-          //             // Add spacing between buttons
-          //             Expanded(
-          //               // Use Expanded to make the second button also take available space
-          //               child: SizedBox(
-          //                 child: ElevatedButton(
-          //                   onPressed: () {
-          //                     _postCartDataprintandorder(context);
-
-          //                     // Add your print and order logic here
-          //                     print("Print and Order button pressed");
-          //                   },
-          //                   style: ElevatedButton.styleFrom(
-          //                     backgroundColor:
-          //                         Colors.blue, // Choose a different color
-          //                     foregroundColor: Colors.white,
-          //                     padding: EdgeInsets.symmetric(
-          //                         vertical: 1.h), // Assuming 'h' is defined
-          //                     textStyle: TextStyle(
-          //                       fontSize: 16.sp, // Assuming 'sp' is defined
-          //                       fontWeight: FontWeight.bold,
-          //                     ),
-          //                   ),
-          //                   child: Text("Print and Order"),
-          //                 ),
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ),
-
-          ),
+          )),
     );
   }
 }

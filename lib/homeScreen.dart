@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as developer;
 import 'package:shimmer/shimmer.dart';
 import 'package:waiter_app/OrderHistoryScreen.dart';
+import 'package:waiter_app/TableTransfer.dart';
 import 'package:waiter_app/cartprovider.dart';
 import 'package:waiter_app/login.dart';
 import 'package:waiter_app/utils/apphelper.dart';
@@ -102,75 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Fetch item data
-  // Future<void> _fetchItemData(int shopid) async {
-  //   setState(() {
-  //     isItemLoading = true;
-  //   });
-
-  //   try {
-  //     // Step 1: Fetch gsttype
-  //     final gstResponse = await http
-  //         .get(Uri.parse('https://hotelserver.billhost.co.in/shopmas/$shopid'));
-
-  //     if (gstResponse.statusCode == 200) {
-  //       final gstData = jsonDecode(gstResponse.body);
-  //       int gstType = gstData['gsttype']; // Extract gsttype
-
-  //       // Step 2: Fetch items
-  //       final response = await http
-  //           .get(Uri.parse('https://hotelserver.billhost.co.in/$shopid/item'));
-
-  //       if (response.statusCode == 200) {
-  //         List<Map<String, dynamic>> items =
-  //             List<Map<String, dynamic>>.from(jsonDecode(response.body));
-
-  //         // Step 3: Modify 'restrate' based on gsttype BEFORE assigning to allItems
-  //         for (var item in items) {
-  //           double restrate = item['restrate']?.toDouble() ?? 0.0;
-  //           double gst = item['gst']?.toDouble() ?? 0.0;
-  //           double cess = item['cess']?.toDouble() ?? 0.0;
-
-  //           if (gstType == 1) {
-  //             restrate =
-  //                 restrate + ((cess + gst) / (100 + cess + gst)) * restrate;
-  //           }
-
-  //           item['restrate'] = double.parse(restrate.toStringAsFixed(5));
-  //         }
-
-  //         // ✅ Step 4: Assign corrected data to both lists
-  //         setState(() {
-  //           allItems = List.from(items); // ✅ Store corrected values
-  //           filteredItems = List.from(allItems); // ✅ Copy corrected values
-  //         });
-
-  //         // ✅ Debug: Print to verify correct values
-  //         for (var item in filteredItems) {
-  //           print(
-  //               "Updated Item: ${item['itname']}, restrate: ${item['restrate']}");
-  //         }
-  //       } else {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text("Failed to load items")),
-  //         );
-  //       }
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Failed to load GST type")),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Error fetching data")),
-  //     );
-  //   } finally {
-  //     setState(() {
-  //       isItemLoading = false;
-  //     });
-  //   }
-  // }
-
   Future<void> _fetchItemData(int shopid) async {
     setState(() {
       isItemLoading = true;
@@ -237,81 +169,6 @@ class _HomeScreenState extends State<HomeScreen> {
       // print(e);
     }
   }
-
-  // Future<void> _fetchDishes(int dishTypeId, int shopid) async {
-  //   setState(() {
-  //     isItemLoading = true; // Show loading indicator
-  //   });
-
-  //   try {
-  //     final gstResponse = await http
-  //         .get(Uri.parse('https://hotelserver.billhost.co.in/shopmas/$shopid'));
-
-  //     if (gstResponse.statusCode == 200) {
-  //       final gstData = jsonDecode(gstResponse.body);
-  //       int gstType = gstData['gsttype']; // Extract gsttype
-
-  //       final url =
-  //           'https://hotelserver.billhost.co.in/ItemSearchBydtcode/$shopid/$dishTypeId';
-
-  //       final response = await http.get(Uri.parse(url));
-
-  //       if (response.statusCode == 200) {
-  //         List<Map<String, dynamic>> dishes =
-  //             List<Map<String, dynamic>>.from(jsonDecode(response.body));
-
-  //         // ✅ Apply 'restrate' calculation before updating `filteredItems`
-  //         for (var item in dishes) {
-  //           double restrate = item['restrate']?.toDouble() ?? 0.0;
-  //           double gst = item['gst']?.toDouble() ?? 0.0;
-  //           double cess = item['cess']?.toDouble() ?? 0.0;
-
-  //           if (gstType == 1) {
-  //             restrate =
-  //                 restrate + ((cess + gst) / (100 + cess + gst)) * restrate;
-  //           }
-
-  //           item['restrate'] = double.parse(restrate.toStringAsFixed(5));
-  //         }
-
-  //         setState(() {
-  //           filteredItems = List.from(dishes); // ✅ Update filtered items
-  //           isItemLoading = false;
-  //         });
-
-  //         // ✅ Debug: Print to verify correct values
-  //         for (var item in filteredItems) {
-  //           print("Dish: ${item['itname']}, restrate: ${item['restrate']}");
-  //         }
-  //       } else {
-  //         developer.log(
-  //             'Failed to load dishes. Status Code: ${response.statusCode}',
-  //             name: 'API Error');
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text("Failed to load dishes")),
-  //         );
-  //         setState(() {
-  //           filteredItems = [];
-  //           isItemLoading = false;
-  //         });
-  //       }
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Failed to load GST type")),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     developer.log('Error fetching dishes: $e',
-  //         name: 'API Exception', error: e);
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Error fetching dishes")),
-  //     );
-  //     setState(() {
-  //       filteredItems = [];
-  //       isItemLoading = false;
-  //     });
-  //   }
-  // }
 
   Future<void> _fetchDishes(int dishTypeId, int shopid) async {
     setState(() {
@@ -391,27 +248,6 @@ class _HomeScreenState extends State<HomeScreen> {
       []; // Backup of items when search starts
   bool isSearchActive = false; // Track if search is active
 
-  // void searchItems(String query) {
-  //   setState(() {
-  //     if (query.isEmpty) {
-  //       filteredItems =
-  //           List.from(allItems); // ✅ Restore correct restrate values
-  //       isSearchActive = false;
-  //     } else {
-  //       if (!isSearchActive) {
-  //         previousDisplayedItems = List.from(filteredItems);
-  //         isSearchActive = true;
-  //       }
-  //       filteredItems = allItems
-  //           .where((item) => item['itname']
-  //               .toString()
-  //               .toLowerCase()
-  //               .contains(query.toLowerCase()))
-  //           .toList();
-  //     }
-  //   });
-  // }
-
   void searchItems(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -434,23 +270,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
   }
-
-  // void searchItems(String query) {
-  //   setState(() {
-  //     if (query.isEmpty) {
-  //       // filteredItems = []; // Hide items when search is empty
-  //       filteredItems =
-  //           List.from(allItems); // Show original items when search is cleared
-  //     } else {
-  //       filteredItems = allItems
-  //           .where((item) => item['itname']
-  //               .toString()
-  //               .toLowerCase()
-  //               .contains(query.toLowerCase()))
-  //           .toList();
-  //     }
-  //   });
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -475,163 +294,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             SizedBox(height: 3.5.h),
-            // Padding(
-            //   padding: EdgeInsets.all(8),
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //     children: [
-            //       Expanded(
-            //         flex: 2,
-            //         child: Consumer<CartProvider>(
-            //           builder: (context, cartProvider, child) {
-            //             return Row(
-            //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //               children: [
-            //                 ElevatedButton(
-            //                   onPressed: () {
-            //                     _showTableSelectionDialog(
-            //                       context,
-            //                     );
-            //                     cartProvider.setSelectedOption("Table");
-            //                   },
-            //                   style: ElevatedButton.styleFrom(
-            //                     backgroundColor:
-            //                         cartProvider.selectedOption == "Table"
-            //                             ? Colors.green
-            //                             : Colors.black,
-            //                     foregroundColor: Colors.white,
-            //                     minimumSize:
-            //                         Size(18.w, 6.h), // Adjust width & height
-            //                     padding: EdgeInsets.symmetric(
-            //                         horizontal: 2.w, vertical: 1.h),
-            //                   ),
-            //                   child: Text(
-            //                     cartProvider.selectedTableName.isNotEmpty
-            //                         ? cartProvider.selectedTableName
-            //                         : "Select Table",
-            //                     // Show selected table name or default text
-            //                     style: TextStyle(fontSize: 15.sp),
-            //                   ),
-            //                 ),
-            //                 SizedBox(width: 0.5.h),
-            //                 ElevatedButton(
-            //                   onPressed: () {
-            //                     cartProvider.setSelectedOption("Delivery");
-            //                   },
-            //                   style: ElevatedButton.styleFrom(
-            //                     backgroundColor:
-            //                         cartProvider.selectedOption == "Delivery"
-            //                             ? Colors.green
-            //                             : Colors.black,
-            //                     foregroundColor: Colors.white,
-            //                     minimumSize: Size(18.w, 6.h),
-            //                     padding: EdgeInsets.symmetric(
-            //                         horizontal: 2.w, vertical: 1.h),
-            //                   ),
-            //                   child: Text("Delivery",
-            //                       style: TextStyle(fontSize: 15.sp)),
-            //                 ),
-            //                 SizedBox(width: 0.5.h),
-            //                 ElevatedButton(
-            //                   onPressed: () {
-            //                     cartProvider.setSelectedOption("Takeaway");
-            //                   },
-            //                   style: ElevatedButton.styleFrom(
-            //                     backgroundColor:
-            //                         cartProvider.selectedOption == "Takeaway"
-            //                             ? Colors.green
-            //                             : Colors.black,
-            //                     foregroundColor: Colors.white,
-            //                     minimumSize: Size(18.w, 6.h),
-            //                     padding: EdgeInsets.symmetric(
-            //                         horizontal: 2.w, vertical: 1.h),
-            //                   ),
-            //                   child: Text("Takeaway",
-            //                       style: TextStyle(fontSize: 15.sp)),
-            //                 ),
-            //               ],
-            //             );
-            //           },
-            //         ),
-            //       ),
-            //       Expanded(
-            //         flex: 1,
-            //         child: Row(
-            //           mainAxisAlignment: MainAxisAlignment.end,
-            //           children: [
-            //             Align(
-            //               alignment: Alignment.centerRight,
-            //               child: PopupMenuButton<String>(
-            //                 onSelected: (value) {
-            //                   if (value == 'logout') {
-            //                     _logout(context);
-            //                   } else if (value == 'about') {
-            //                     _showAboutDialog();
-            //                   } else if (value == 'help') {
-            //                     _showHelpDialog();
-            //                   }
-            //                 },
-            //                 itemBuilder: (BuildContext context) {
-            //                   return const <PopupMenuEntry<String>>[
-            //                     // Added const here
-            //                     PopupMenuItem<String>(
-            //                       value: 'about',
-            //                       child: Row(
-            //                         children: const [
-            //                           // Added const here
-            //                           Icon(Icons.info, color: Colors.black),
-            //                           SizedBox(width: 8),
-            //                           Text('About'),
-            //                         ],
-            //                       ),
-            //                     ),
-            //                     PopupMenuItem<String>(
-            //                       value: 'help',
-            //                       child: Row(
-            //                         children: const [
-            //                           // Added const here
-            //                           Icon(Icons.help, color: Colors.black),
-            //                           SizedBox(width: 8),
-            //                           Text('Help'),
-            //                         ],
-            //                       ),
-            //                     ),
-            //                     PopupMenuItem<String>(
-            //                       value: 'logout',
-            //                       child: Row(
-            //                         children: const [
-            //                           // Added const here
-            //                           Icon(Icons.logout, color: Colors.black),
-            //                           SizedBox(width: 8),
-            //                           Text('Logout'),
-            //                         ],
-            //                       ),
-            //                     ),
-            //                   ];
-            //                 },
-            //                 child: Row(
-            //                   mainAxisSize:
-            //                       MainAxisSize.min, // Important for layout
-            //                   children: [
-            //                     const Icon(Icons.person,
-            //                         size: 24, color: Colors.black),
-            //                     const SizedBox(width: 8),
-            //                     Text(
-            //                       waiterName,
-            //                       style: const TextStyle(
-            //                           fontSize: 16,
-            //                           fontWeight: FontWeight.bold),
-            //                     ),
-            //                   ],
-            //                 ),
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
 
             Padding(
               padding: EdgeInsets.all(8),
@@ -650,13 +312,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         } else if (value == 'help') {
                           _showHelpDialog();
                         }
-                        // else if (value == 'Order History') {
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) => OrderHistoryScreen()),
-                        //   );
-                        // }
                       },
                       itemBuilder: (BuildContext context) {
                         return <PopupMenuEntry<String>>[
@@ -705,14 +360,43 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           PopupMenuItem<String>(
                             value: 'Order History',
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          OrderHistoryScreen()));
+                            },
                             child: Row(
                               children: [
                                 Icon(Icons.history, color: Colors.black),
                                 SizedBox(width: 2.w),
                                 Text(
                                   'Order History',
-                                  style: TextStyle(fontSize: 16.sp),
+                                  style: TextStyle(
+                                      fontSize: 16.sp, color: Colors.black),
                                 ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: "Table Transfer",
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => TableTransfer()));
+                              // table transfer screen name
+                            },
+                            child: Row(
+                              children: [
+                                Icon(Icons.swap_horiz, color: Colors.black),
+                                SizedBox(width: 2.w),
+                                Text(
+                                  "Table Transfer",
+                                  style: TextStyle(
+                                      fontSize: 16.sp, color: Colors.black),
+                                )
                               ],
                             ),
                           ),
@@ -723,7 +407,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Icon(Icons.logout, color: Colors.black),
                                 SizedBox(width: 2.w),
                                 Text('Logout',
-                                    style: TextStyle(fontSize: 16.sp)),
+                                    style: TextStyle(
+                                        fontSize: 16.sp, color: Colors.black)),
                               ],
                             ),
                           ),
@@ -743,7 +428,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                _showTableSelectionDialog(context);
+                                int shopid =
+                                    widget.responseData[0]['shopid'] ?? 0;
+                                _showTableSelectionDialog(context, shopid);
                                 cartProvider.setSelectedOption("Table");
                               },
                               style: ElevatedButton.styleFrom(
@@ -763,6 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: TextStyle(fontSize: 15.sp),
                               ),
                             ),
+
                             SizedBox(width: 0.3.w),
                             ElevatedButton(
                               onPressed: () {
@@ -811,26 +499,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     _showNotifications(
                                         context); // Function to open notifications
                                   },
-                                ),
-                                // Badge for notifications (optional)
-                                Positioned(
-                                  right: 4,
-                                  top: 4,
-                                  child: Container(
-                                    padding: EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      "4", // Example notification count
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),
@@ -953,7 +621,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-            // SizedBox(height: 1),
             Padding(
               padding: EdgeInsets.only(left: 1.5.w, bottom: 0.5.h),
               child: Text(
@@ -1162,18 +829,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
 
-                                          // Container(
-                                          //   height: 22.sp,
-                                          //   child: Text(
-                                          //     item['itname'].toString(),
-                                          //     style: TextStyle(
-                                          //       fontSize: 13.sp,
-                                          //       fontWeight: FontWeight.w900,
-                                          //       color: Colors.black,
-                                          //     ),
-                                          //     textAlign: TextAlign.center,
-                                          //   ),
-                                          // ),
                                           SizedBox(height: 0.3.h), // Spacing
 
                                           // Row for increment, decrement, and price
@@ -1408,15 +1063,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// red table payment pending function
-
-  void _showTableSelectionDialog(BuildContext context) {
+  void _showTableSelectionDialog(BuildContext context, int shopid) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    Timer? tableUpdateTimer; // Declare Timer
+
+    // Function to update table data every 6 seconds
+    void startTableUpdateTimer(StateSetter setStateDialog, int shopid) {
+      tableUpdateTimer?.cancel(); // Cancel previous timer (if any)
+
+      tableUpdateTimer =
+          Timer.periodic(const Duration(seconds: 6), (timer) async {
+        await _fetchTableData(shopid); // Fetch tables for the selected shop
+        setStateDialog(() {}); // Update UI inside the dialog
+      });
+    }
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) {
+          if (tableUpdateTimer == null) {
+            startTableUpdateTimer(
+                setStateDialog, shopid); // Start with correct shopid
+          }
+
           return AlertDialog(
             title: const Text("Select a Table"),
             content: SizedBox(
@@ -1479,6 +1149,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               _showPaymentPendingDialog(context);
                             } else {
                               cartProvider.setSelectedTable(tableId, tableName);
+                              tableUpdateTimer
+                                  ?.cancel(); // Stop timer on selection
                               Navigator.pop(context);
                             }
                           },
@@ -1505,131 +1177,10 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-    );
+    ).then((_) {
+      tableUpdateTimer?.cancel(); // Stop the timer when the dialog is closed
+    });
   }
-
-  // void _showTableSelectionDialog(BuildContext context, int shopid) {
-  //   final cartProvider = Provider.of<CartProvider>(context, listen: false);
-
-  //   Timer? timer; // Move timer outside so it can be referenced later
-
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => StatefulBuilder(
-  //       builder: (context, setStateDialog) {
-  //         List<dynamic> tableData = [];
-  //         bool isLoading = true;
-
-  //         // Function to fetch table data
-  //         Future<void> _fetchTableData() async {
-  //           try {
-  //             final response = await http.get(Uri.parse(
-  //                 'https://hotelserver.billhost.co.in/$shopid/table'));
-  //             if (response.statusCode == 200) {
-  //               List<dynamic> updatedData = jsonDecode(response.body);
-  //               setStateDialog(() {
-  //                 tableData = updatedData; // Ensure data updates
-  //                 isLoading = false;
-  //               });
-  //             } else {
-  //               print("Error: Unable to fetch table data");
-  //             }
-  //           } catch (e) {
-  //             print("Error fetching tables: $e");
-  //           }
-  //         }
-
-  //         // Fetch table data initially when the dialog is shown
-  //         _fetchTableData();
-
-  //         // Periodic refresh every 5 seconds
-  //         timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-  //           _fetchTableData();
-  //         });
-
-  //         return AlertDialog(
-  //           title: Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               const Text("Select a Table"),
-  //               IconButton(
-  //                 icon: const Icon(Icons.refresh),
-  //                 onPressed: _fetchTableData, // Manual refresh option
-  //               ),
-  //             ],
-  //           ),
-  //           content: SizedBox(
-  //             width: MediaQuery.of(context).size.width * 0.9,
-  //             height: MediaQuery.of(context).size.height * 0.5,
-  //             child: isLoading
-  //                 ? Center(child: CircularProgressIndicator())
-  //                 : GridView.builder(
-  //                     gridDelegate:
-  //                         const SliverGridDelegateWithFixedCrossAxisCount(
-  //                       crossAxisCount: 3,
-  //                       childAspectRatio: 1.6,
-  //                       crossAxisSpacing: 10,
-  //                       mainAxisSpacing: 10,
-  //                     ),
-  //                     itemCount: tableData.length,
-  //                     itemBuilder: (context, index) {
-  //                       String tableName = tableData[index]['tname'].toString();
-  //                       int tableId = tableData[index]['id'];
-  //                       int status = tableData[index]['status'];
-
-  //                       Color tableColor;
-  //                       Color textColor;
-
-  //                       if (status == 0) {
-  //                         tableColor = Colors.white;
-  //                         textColor = Colors.black;
-  //                       } else if (status == 1) {
-  //                         tableColor = Colors.green;
-  //                         textColor = Colors.white;
-  //                       } else {
-  //                         tableColor = Colors.red;
-  //                         textColor = Colors.white;
-  //                       }
-
-  //                       return GestureDetector(
-  //                         onTap: () {
-  //                           if (status == 2) {
-  //                             _showPaymentPendingDialog(context);
-  //                           } else {
-  //                             cartProvider.setSelectedTable(tableId, tableName);
-  //                             timer
-  //                                 ?.cancel(); // Stop timer when a table is selected
-  //                             Navigator.pop(context);
-  //                           }
-  //                         },
-  //                         child: Container(
-  //                           alignment: Alignment.center,
-  //                           decoration: BoxDecoration(
-  //                             border: Border.all(color: Colors.grey),
-  //                             color: tableColor,
-  //                             borderRadius: BorderRadius.circular(4),
-  //                           ),
-  //                           child: Text(
-  //                             tableName,
-  //                             style: TextStyle(
-  //                               fontSize: 16,
-  //                               fontWeight: FontWeight.bold,
-  //                               color: textColor,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       );
-  //                     },
-  //                   ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   ).then((_) {
-  //     // ✅ Fix: Cancel timer when dialog is dismissed
-  //     timer?.cancel();
-  //   });
-  // }
 
   void _showPaymentPendingDialog(BuildContext context) {
     showDialog(
