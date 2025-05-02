@@ -751,19 +751,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     // print(item.toString());
                                     int itemCount = itemCounts[item['id']] ?? 0;
 
-                                    // // Update restrate dynamically based on gsttype
-                                    // double restrate = item['restrate']
-                                    //     .toDouble(); // Convert to double
-                                    // // int gstType = shopDetails['gsttype']; // Fetch gsttype from API response
-
-                                    // if (gstType == 1) {
-                                    //   double gst = item['gst'].toDouble();
-                                    //   double cess = item['cess'].toDouble();
-                                    //   restrate = restrate +
-                                    //       ((cess + gst) / (100 + cess + gst)) *
-                                    //           restrate;
-                                    // }
-
                                     return Container(
                                       // padding: EdgeInsets.all(2.w),
                                       decoration: BoxDecoration(
@@ -1067,12 +1054,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     Timer? tableUpdateTimer; // Declare Timer
 
-    // Function to update table data every 6 seconds
+    // Function to update table data every seconds
     void startTableUpdateTimer(StateSetter setStateDialog, int shopid) {
-      tableUpdateTimer?.cancel(); // Cancel previous timer (if any)
+      // tableUpdateTimer?.cancel(); // Cancel previous timer (if any)
 
       tableUpdateTimer =
-          Timer.periodic(const Duration(seconds: 6), (timer) async {
+          Timer.periodic(const Duration(seconds: 1), (timer) async {
         await _fetchTableData(shopid); // Fetch tables for the selected shop
         setStateDialog(() {}); // Update UI inside the dialog
       });
@@ -1186,7 +1173,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Table Not Available"),
+        title: const Text("Table is not available"),
         content: const Text("Payment is pending for this table....."),
         actions: [
           TextButton(

@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _password = TextEditingController();
   final FocusNode _usernameFocus = FocusNode();
   final FocusNode _passwordFocus = FocusNode();
-  bool passwordVisible = false;
+  bool passwordVisible = true;
 
   @override
   void initState() {
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextField(
                   controller: _password,
                   focusNode: _passwordFocus,
-                  obscureText: !passwordVisible,
+                  obscureText: passwordVisible,
                   style: const TextStyle(color: Colors.black),
                   cursorColor: Colors.black,
                   decoration: InputDecoration(

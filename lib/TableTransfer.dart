@@ -1,89 +1,76 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:responsive_sizer/responsive_sizer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:waiter_app/api_services/api_service.dart';
 
 class TableTransfer extends StatefulWidget {
   @override
-  State<TableTransfer> createState() => _TableTransferState();
+  _TableTransferState createState() => _TableTransferState();
 }
 
 class _TableTransferState extends State<TableTransfer> {
-  List<String> fromTables = [];
-  List<String> toTables = [];
+  List<Map<String, dynamic>> fromTables = [];
+  List<Map<String, dynamic>> toTables = [];
 
-  String? selectedFromTable;
-  String? selectedToTable;
+  Map<String, dynamic>? selectedFromTable;
+  Map<String, dynamic>? selectedToTable;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
-    fetchFromTables();
-    fetchToTables();
+    _loadTables();
   }
 
-  Future<void> fetchFromTables() async {
-    final prefs = await SharedPreferences.getInstance();
-    final int? shopid = prefs.getInt("wcode");
-    final url = 'https://hotelserver.billhost.co.in/$shopid/table/1';
-
+  Future<void> _loadTables() async {
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          fromTables =
-              data.map<String>((item) => item['tname'].toString()).toList();
-        });
-      } else {
-        throw Exception('Failed to load tables');
-      }
+      final occupiedTables = await _apiService.fetchOccupiedTables();
+      final availableTables = await _apiService.fetchAvailableTables();
+      setState(() {
+        fromTables = occupiedTables;
+        toTables = availableTables;
+      });
     } catch (e) {
-      print('Error fetching from tables: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching From Table list')),
+        SnackBar(content: Text('Error loading tables: ${e.toString()}')),
       );
     }
   }
 
-  Future<void> fetchToTables() async {
-    final prefs = await SharedPreferences.getInstance();
-    final int? shopid = prefs.getInt("wcode");
-    final url = 'https://hotelserver.billhost.co.in/$shopid/table/0';
+  Future<void> _transferTable() async {
+    if (selectedFromTable == null || selectedToTable == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select both tables')),
+      );
+      return;
+    }
+
+    if (selectedFromTable!['id'] == selectedToTable!['id']) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot transfer to the same table')),
+      );
+      return;
+    }
 
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          toTables =
-              data.map<String>((item) => item['tname'].toString()).toList();
-        });
-      } else {
-        throw Exception('Failed to load tables');
-      }
-    } catch (e) {
-      print('Error fetching to tables: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching To Table list')),
+      await _apiService.transferTable(
+        fromId: selectedFromTable!['id'].toString(),
+        toId: selectedToTable!['id'].toString(),
+        toName: selectedToTable!['tname'].toString(),
+        nop: selectedFromTable!['nop'].toString(),
+        wcode: selectedFromTable!['wcode'].toString(),
+        wname: selectedFromTable!['wname'].toString(),
       );
-    }
-  }
 
-  void transferTable() {
-    if (selectedFromTable != null &&
-        selectedToTable != null &&
-        selectedFromTable != selectedToTable) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Transferred from $selectedFromTable to $selectedToTable')),
+        SnackBar(content: Text('Table transferred successfully')),
       );
-    } else {
+
+      await Future.delayed(Duration(seconds: 2));
+      Navigator.of(context).pop();
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select valid tables')),
+        SnackBar(content: Text('Failed to transfer table: ${e.toString()}')),
       );
     }
   }
@@ -114,144 +101,52 @@ class _TableTransferState extends State<TableTransfer> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // FROM TABLE
+                  // From Table Section
                   Text(
                     "From Table:",
                     style:
                         TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 1.h),
-
-                  DropdownButtonFormField2(
+                  _buildTableDropdown(
                     value: selectedFromTable,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                    ),
-                    hint: Text('Select...'),
-                    items: fromTables.map((item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(item),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedFromTable = value;
-                      });
-                    },
-                    dropdownStyleData: DropdownStyleData(
-                      maxHeight: 30.h,
-                      width: 92.2.w, // Or set a min width if preferred
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.white,
-                        border: Border.all(color: Colors.black),
-                      ),
-                      elevation: 2,
-                      offset: const Offset(0, 5),
-                    ),
-                    iconStyleData: IconStyleData(
-                      icon: Icon(Icons.arrow_drop_down, color: Colors.black),
-                      iconSize: 24,
-                    ),
+                    items: fromTables,
+                    onChanged: (value) =>
+                        setState(() => selectedFromTable = value),
                   ),
 
                   SizedBox(height: 3.h),
-
-                  Center(
-                    child: Icon(
-                      Icons.swap_vert,
-                      size: 25.sp,
-                    ),
-                  ),
-
+                  Center(child: Icon(Icons.swap_vert, size: 25.sp)),
                   SizedBox(height: 3.h),
 
-                  // TO TABLE
+                  // To Table Section
                   Text(
                     "To Table:",
                     style:
                         TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 1.h),
-
-                  DropdownButtonFormField2(
+                  _buildTableDropdown(
                     value: selectedToTable,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                    ),
-                    hint: Text('Select...'),
-                    items: toTables.map((item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(item),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedToTable = value;
-                      });
-                    },
-                    dropdownStyleData: DropdownStyleData(
-                      maxHeight: 30.h,
-                      width: 92.2.w, // Set a fixed or minimum width
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.white,
-                        border: Border.all(color: Colors.black),
-                      ),
-                      elevation: 2,
-                      offset: const Offset(0, 5), // Dropdown appears just below
-                    ),
-                    iconStyleData: IconStyleData(
-                      icon: Icon(Icons.arrow_drop_down, color: Colors.black),
-                      iconSize: 24,
-                    ),
+                    items: toTables,
+                    onChanged: (value) =>
+                        setState(() => selectedToTable = value),
                   ),
 
-                  SizedBox(height: 17.h),
+                  Spacer(),
 
-                  // BUTTON
+                  // Transfer Button
                   SizedBox(
                     width: double.infinity,
                     height: 7.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
-                        // foregroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: transferTable,
+                      onPressed: _transferTable,
                       child: Text(
                         'Transfer Table',
                         style: TextStyle(fontSize: 18.sp, color: Colors.white),
@@ -264,6 +159,53 @@ class _TableTransferState extends State<TableTransfer> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTableDropdown({
+    required Map<String, dynamic>? value,
+    required List<Map<String, dynamic>> items,
+    required Function(Map<String, dynamic>?) onChanged,
+  }) {
+    return DropdownButtonFormField2<Map<String, dynamic>>(
+      value: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.black),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.black),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.black),
+        ),
+      ),
+      hint: Text('Select...'),
+      items: items.map((item) {
+        return DropdownMenuItem(
+          value: item,
+          child: Text(item['tname']),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      dropdownStyleData: DropdownStyleData(
+        maxHeight: 30.h,
+        width: 92.2.w,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+          border: Border.all(color: Colors.black),
+        ),
+      ),
+      iconStyleData: IconStyleData(
+        icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+        iconSize: 24,
+      ),
     );
   }
 }

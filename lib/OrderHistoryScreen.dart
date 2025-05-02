@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:waiter_app/OrderModification.dart';
+import 'package:waiter_app/api_services/api_service.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   @override
@@ -24,6 +22,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   double _lastOffset = 0;
 
   Timer? _orderRefreshTimer;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -35,117 +34,61 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       _fetchOrders();
     });
 
-    _scrollController.addListener(() {
-      double currentOffset = _scrollController.offset;
+    _scrollController.addListener(_handleScroll);
+  }
 
-      if (currentOffset > _lastOffset && _showDateRow) {
-        // Scrolling down
-        setState(() {
-          _showDateRow = false;
-        });
-      } else if (currentOffset < _lastOffset && !_showDateRow) {
-        // Scrolling up
-        setState(() {
-          _showDateRow = true;
-        });
-      }
-      _lastOffset = currentOffset;
-    });
+  void _handleScroll() {
+    double currentOffset = _scrollController.offset;
+
+    if (currentOffset > _lastOffset && _showDateRow) {
+      // Scrolling down
+      setState(() => _showDateRow = false);
+    } else if (currentOffset < _lastOffset && !_showDateRow) {
+      // Scrolling up
+      setState(() => _showDateRow = true);
+    }
+    _lastOffset = currentOffset;
   }
 
   @override
   void dispose() {
-    // Cancel the timer when screen is disposed
     _orderRefreshTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> cancelOrder({
+  Future<void> _fetchOrders() async {
+    try {
+      final data =
+          await _apiService.fetchOrders(fromDate: fromDate, toDate: toDate);
+      setState(() => orders = data);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      setState(() => orders = []);
+    }
+  }
+
+  Future<void> _cancelOrder({
     required String shopvno,
     required String tablecode,
     required String reason,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final int? shopid = prefs.getInt("wcode");
-
-    if (shopid == null || shopid == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Shop ID not found , Please log in again.")),
-      );
-      return;
-    }
-
-    final url = Uri.parse(
-      "https://hotelserver.billhost.co.in/CancelOrder/$shopid/$shopvno/$tablecode/$reason",
-    );
-
     try {
-      final response = await http.post(url);
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Order cancelled successfully.")),
-        );
-
-        _fetchOrders(); // refresh the list
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to cancel order: ${response.body}")),
-        );
-      }
+      await _apiService.cancelOrder(
+        shopvno: shopvno,
+        tablecode: tablecode,
+        reason: reason,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Order cancelled successfully.")),
+      );
+      _fetchOrders(); // refresh the list
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error cancelling order: $e")),
+        SnackBar(content: Text(e.toString())),
       );
-    }
-  }
-
-  Future<void> _fetchOrders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final int? wid = prefs.getInt("wid");
-    final int? shopid = prefs.getInt("wcode");
-
-    if (wid == null || wid == 0 || shopid == null || shopid == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                "Shop ID or Waiter ID not found. please log in again......")),
-      );
-      return;
-    }
-
-    String formattedFromDate = DateFormat('yyyy-MM-dd').format(fromDate);
-    String formattedToDate = DateFormat('yyyy-MM-dd').format(toDate);
-
-    final url = Uri.parse(
-        "https://hotelserver.billhost.co.in/kotviewWaiter/$shopid/$formattedFromDate/$formattedToDate/$wid");
-
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data != null && data is List) {
-          setState(() {
-            orders = data;
-          });
-        } else {
-          setState(() {
-            orders = [];
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("No order data found.....")),
-          );
-        }
-      } else {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text("Failed to fetch orders: ${response.body}")),
-        // );
-      }
-    } catch (e) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text("Error fetching orders: $e")),
-      // );
     }
   }
 
@@ -183,7 +126,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Group orders by shopvno
     Map<String, List<dynamic>> groupedOrders = _groupOrdersByShopvno();
 
     return Scaffold(
@@ -205,7 +147,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         ),
         child: Column(
           children: [
-            // Always show date row (animated)
             AnimatedSwitcher(
               duration: Duration(milliseconds: 300),
               child: _showDateRow
@@ -286,7 +227,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         String shopvno = entry.key;
                         List<dynamic> shopOrders = entry.value;
 
-                        // Compute cancellation status for this group
                         bool isCancelled = shopOrders.any((order) =>
                             order['kotMasDTO']?['status']?.toString() == '2');
 
@@ -389,6 +329,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                   final String quantity =
                                       order['kotMasDTO']?['qty']?.toString() ??
                                           "0";
+                                  final bool isCancelled =
+                                      double.tryParse(quantity) == 0;
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16.0, vertical: 8.0),
@@ -397,28 +339,34 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(itemName,
-                                            style: TextStyle(fontSize: 15.sp)),
+                                            style: TextStyle(
+                                                fontSize: 15.sp,
+                                                color: isCancelled
+                                                    ? Colors.red
+                                                    : null)),
                                         Text("Qty: $quantity",
-                                            style: TextStyle(fontSize: 15.sp)),
+                                            style: TextStyle(
+                                                fontSize: 15.sp,
+                                                color: isCancelled
+                                                    ? Colors.red
+                                                    : null)),
                                       ],
                                     ),
                                   );
                                 }).toList(),
-                                // Void and Modify buttons
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 12.0),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      // Void Button
                                       Opacity(
                                         opacity: isCancelled ? 0.5 : 1.0,
                                         child: IgnorePointer(
                                           ignoring: isCancelled,
                                           child: SizedBox(
-                                            height: 5.h,
-                                            width: 22.w,
+                                            height: 4.5.h,
+                                            width: 23.w,
                                             child: ElevatedButton(
                                               onPressed: () {
                                                 showDialog(
@@ -591,7 +539,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                                                 }
                                                                 Navigator.pop(
                                                                     context);
-                                                                await cancelOrder(
+                                                                await _cancelOrder(
                                                                   shopvno:
                                                                       shopvno,
                                                                   tablecode:
@@ -638,22 +586,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                               ),
                                               child: Text(
                                                 "Void",
-                                                style:
-                                                    TextStyle(fontSize: 14.sp),
+                                                style: TextStyle(
+                                                    fontSize: 14.3.sp),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
                                       SizedBox(width: 2.w),
-                                      // Modify Button
                                       Opacity(
                                         opacity: isCancelled ? 0.5 : 1.0,
                                         child: IgnorePointer(
                                           ignoring: isCancelled,
                                           child: SizedBox(
                                             height: 4.5.h,
-                                            width: 22.w,
+                                            width: 23.w,
                                             child: ElevatedButton(
                                               onPressed: () {
                                                 Navigator.push(
@@ -679,8 +626,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                               ),
                                               child: Text(
                                                 "Modify",
-                                                style:
-                                                    TextStyle(fontSize: 14.sp),
+                                                style: TextStyle(
+                                                    fontSize: 14.3.sp),
                                               ),
                                             ),
                                           ),
