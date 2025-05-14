@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:waiter_app/api_services/notification_service.dart';
 import 'package:waiter_app/cartprovider.dart';
 import 'dart:convert';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:waiter_app/dashboardscreen.dart';
 import 'package:waiter_app/login.dart';
+import 'package:waiter_app/providers/notification_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
@@ -23,6 +26,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => CartProvider()),
+        ChangeNotifierProvider(
+            create: (context) => NotificationProvider()), //  Add this line
       ],
       child: MyApp(isLoggedIn: isLoggedIn, responseData: responseData),
     ),

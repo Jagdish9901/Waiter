@@ -469,7 +469,7 @@ SN  Item Name                               QTY
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Cart"),
+        title: Text("Cart"),
         backgroundColor: Color(0xFFFFB300),
       ),
       body: Container(
@@ -478,9 +478,9 @@ SN  Item Name                               QTY
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFFFFB300),
-                const Color(0xFFFFC107),
-                const Color(0xFFFFE082),
+                Color(0xFFFFB300),
+                Color(0xFFFFC107),
+                Color(0xFFFFE082),
               ],
             ),
           ),

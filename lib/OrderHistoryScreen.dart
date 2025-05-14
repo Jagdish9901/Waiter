@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:waiter_app/OrderModification.dart';
 import 'package:waiter_app/api_services/api_service.dart';
+import 'package:waiter_app/main.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   @override
@@ -62,6 +63,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       final data =
           await _apiService.fetchOrders(fromDate: fromDate, toDate: toDate);
       setState(() => orders = data);
+
+      // for (int i = 0; i < orders.length; i++) {
+      //   if (orders[i]["kotMasDTO"] != null) {
+      //     if (orders[i]["kotMasDTO"]["kdsstatus"].toString().toLowerCase() ==
+      //         "0") {
+      //       print("object $i ok");
+      //       await showLocalNotification(
+      //           orders[i]["kotMasDTO"]["shopvno"].toString());
+      //       print("object showLocalNotification $i");
+      //     }
+      //   }
+      // }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
