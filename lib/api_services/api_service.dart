@@ -111,6 +111,8 @@ class ApiService {
     _notificationTimer?.cancel();
   }
 
+// notification not showing after logout
+
   Future<void> _checkForReadyOrders(BuildContext context) async {
     try {
       final prefs = await _prefs;
@@ -135,7 +137,6 @@ class ApiService {
       for (final url in urls) {
         try {
           final response = await http.get(url);
-          // debugPrint('API Called _checkForReadyOrders: ${url.toString()}');
 
           if (response.statusCode == 200) {
             final List<dynamic> data = jsonDecode(response.body);
@@ -145,6 +146,8 @@ class ApiService {
                 final kotWaiterCode = kotMasDTO['wcode']?.toString();
                 if (kotWaiterCode == waiterId) {
                   final orderNo = kotMasDTO['shopvno'].toString();
+
+                  // Only check if we haven't processed this order before
                   if (!processedOrders.contains(orderNo)) {
                     final itemName = kotMasDTO['itname'] ?? 'Unknown Item';
                     final tableName = item['tablename'] ?? 'Unknown Table';
@@ -170,6 +173,66 @@ class ApiService {
       debugPrint('System Error: $e');
     }
   }
+
+  // Future<void> _checkForReadyOrders(BuildContext context) async {
+  //   try {
+  //     final prefs = await _prefs;
+  //     final shopId = prefs.getInt('wcode')?.toString() ?? '0';
+  //     final waiterId = prefs.getInt('wid')?.toString() ?? '0';
+
+  //     if (shopId == '0' || waiterId == '0') return;
+
+  //     final now = DateTime.now();
+  //     final formattedDate = _formatDate(now);
+
+  //     final urls = [
+  //       Uri.parse(
+  //           '$baseUrl/kotviewWaiter/$shopId/$formattedDate/$formattedDate/$waiterId'),
+  //     ];
+
+  //     final provider =
+  //         Provider.of<NotificationProvider>(context, listen: false);
+  //     final processedOrders =
+  //         provider.notifications.map((n) => n.orderNo).toSet();
+
+  //     for (final url in urls) {
+  //       try {
+  //         final response = await http.get(url);
+  //         // debugPrint('API Called _checkForReadyOrders: ${url.toString()}');
+
+  //         if (response.statusCode == 200) {
+  //           final List<dynamic> data = jsonDecode(response.body);
+  //           for (final item in data) {
+  //             final kotMasDTO = item['kotMasDTO'];
+  //             if (kotMasDTO != null && kotMasDTO['kdsstatus'] == 0) {
+  //               final kotWaiterCode = kotMasDTO['wcode']?.toString();
+  //               if (kotWaiterCode == waiterId) {
+  //                 final orderNo = kotMasDTO['shopvno'].toString();
+  //                 if (!processedOrders.contains(orderNo)) {
+  //                   final itemName = kotMasDTO['itname'] ?? 'Unknown Item';
+  //                   final tableName = item['tablename'] ?? 'Unknown Table';
+
+  //                   provider.addNotification(
+  //                     NotificationItem(
+  //                       orderNo: orderNo,
+  //                       itemName: itemName,
+  //                       tableName: tableName,
+  //                       timestamp: DateTime.now(),
+  //                     ),
+  //                   );
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       } catch (e) {
+  //         debugPrint('API Error: $e');
+  //       }
+  //     }
+  //   } catch (e) {
+  //     debugPrint('System Error: $e');
+  //   }
+  // }
 
   // ---------------- Table Transfer Methods ----------------
 

@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:waiter_app/OrderModification.dart';
 import 'package:waiter_app/api_services/api_service.dart';
-import 'package:waiter_app/main.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   @override
@@ -143,7 +142,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Orders"),
+        title: const Text(
+          "Orders",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Color(0xFFFFB300),
       ),
       body: Container(

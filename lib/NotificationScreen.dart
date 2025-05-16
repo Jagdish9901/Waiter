@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:waiter_app/providers/notification_provider.dart';
 
@@ -15,7 +14,7 @@ class NotificationScreen extends StatelessWidget {
           'Notifications',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFFFFB300),
+        backgroundColor: const Color(0XFFFFB300),
         elevation: 4,
         actions: [
           Consumer<NotificationProvider>(
@@ -105,7 +104,7 @@ class NotificationScreen extends StatelessWidget {
                         SnackBar(
                           content: Text(
                               "Notification for order #${notification.orderNo} removed"),
-                          backgroundColor: Colors.red.shade400,
+                          backgroundColor: Colors.black,
                         ),
                       );
                     },

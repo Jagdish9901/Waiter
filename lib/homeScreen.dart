@@ -1157,8 +1157,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:waiter_app/NotificationScreen.dart';
 import 'package:waiter_app/OrderHistoryScreen.dart';
 import 'package:waiter_app/TableTransfer.dart';
-import 'package:waiter_app/cartprovider.dart';
 import 'package:waiter_app/models/home_viewmodel.dart';
+import 'package:waiter_app/providers/cartprovider.dart';
 import 'package:waiter_app/providers/notification_provider.dart';
 import 'package:waiter_app/utils/auth_utils.dart';
 
@@ -1410,7 +1410,7 @@ class _HomeScreenContent extends StatelessWidget {
     int unreadCount = notificationProvider.unreadCount;
     final badgeText = unreadCount > 9 ? '9+' : '$unreadCount';
     final badgeWidth = unreadCount > 9 ? 5.w : 4.w;
-    final fontSize = unreadCount > 9 ? 12.2.sp : 14.sp;
+    final fontSize = unreadCount > 9 ? 12.4.sp : 14.sp;
 
     return Stack(
       children: [
@@ -1426,7 +1426,7 @@ class _HomeScreenContent extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(15),
               ),
               width: badgeWidth,
               height: 2.3.h,

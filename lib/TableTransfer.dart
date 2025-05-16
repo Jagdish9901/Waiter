@@ -81,7 +81,10 @@ class _TableTransferState extends State<TableTransfer> {
       builder: (context, orientation, screenType) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('Table Transfer'),
+            title: Text(
+              'Table Transfer',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             backgroundColor: Color(0XFFFFB300),
           ),
           body: Container(

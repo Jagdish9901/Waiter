@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:waiter_app/api_services/notification_service.dart';
-import 'package:waiter_app/cartprovider.dart';
 import 'dart:convert';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:waiter_app/dashboardscreen.dart';
 import 'package:waiter_app/login.dart';
+import 'package:waiter_app/providers/cartprovider.dart';
 import 'package:waiter_app/providers/notification_provider.dart';
 
 void main() async {
