@@ -600,7 +600,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                                 ),
                                               ),
                                               child: Text(
-                                                "Void",
+                                                "Cancle",
                                                 style: TextStyle(
                                                     fontSize: 14.3.sp),
                                               ),
@@ -615,7 +615,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                           ignoring: isCancelled,
                                           child: SizedBox(
                                             height: 4.5.h,
-                                            width: 23.w,
+                                            width: 24.w,
                                             child: ElevatedButton(
                                               onPressed: () {
                                                 Navigator.push(
@@ -639,10 +639,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                                       BorderRadius.circular(8),
                                                 ),
                                               ),
-                                              child: Text(
-                                                "Modify",
-                                                style: TextStyle(
-                                                    fontSize: 14.3.sp),
+                                              child: FittedBox(
+                                                child: Text(
+                                                  "Modify",
+                                                  style: TextStyle(
+                                                      fontSize: 14.3.sp),
+                                                ),
                                               ),
                                             ),
                                           ),

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "476474245368",
+    "project_id": "billhosthotel",
+    "storage_bucket": "billhosthotel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476474245368:android:c3d91bed091e6bd6813b0d",
+        "android_client_info": {
+          "package_name": "com.example.billhosts"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_McmKhKbs2o7F0pLyLUm-kE5XNQIGhfU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476474245368:android:dc082ded94e309e5813b0d",
+        "android_client_info": {
+          "package_name": "com.example.waiter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_McmKhKbs2o7F0pLyLUm-kE5XNQIGhfU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

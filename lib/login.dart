@@ -201,41 +201,51 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: const TextStyle(color: Colors.black),
                   cursorColor: Colors.black,
                   decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.2),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: Colors.black), // Default black border
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: Colors.black,
-                          width: 1.5), // Black border when not focused
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: Colors.black,
-                          width: 2), // Black border when focused
-                    ),
-                    prefixIcon: Icon(
-                      Icons.lock,
-                      color: Colors.black,
-                    ),
-                    suffixIcon: IconButton(
-                      color: Colors.black,
-                      icon: Icon(passwordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                      onPressed: () {
-                        setState(() {
-                          passwordVisible = !passwordVisible;
-                        });
-                      },
-                    ),
-                  ),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.2),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: Colors.black), // Default black border
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 1.5), // Black border when not focused
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 2), // Black border when focused
+                      ),
+                      prefixIcon: Icon(
+                        Icons.lock,
+                        color: Colors.black,
+                      ),
+                      // suffixIcon: IconButton(
+                      //   color: Colors.black,
+                      //   icon: Icon(passwordVisible
+                      //       ? Icons.visibility
+                      //       : Icons.visibility_off),
+                      //   onPressed: () {
+                      //     setState(() {
+                      //       passwordVisible = !passwordVisible;
+                      //     });
+                      //   },
+                      // ),
+                      suffixIcon: IconButton(
+                        color: Colors.black,
+                        icon: Icon(passwordVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            passwordVisible = !passwordVisible;
+                          });
+                        },
+                      )),
                 ),
                 SizedBox(height: 5.h),
                 SizedBox(

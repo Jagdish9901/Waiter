@@ -1,6 +1,4 @@
-// cart_viewmodel.dart
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
@@ -32,19 +30,21 @@ class CartViewModel {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final selectedItems = cartProvider.cartItems;
 
-    debugPrint("Starting postCartData...");
+    // debugPrint("Starting postCartData...");
 
     if (selectedItems.isEmpty) {
-      debugPrint("Cart is empty. Aborting request.");
+      // debugPrint("Cart is empty. Aborting request.");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cart is empty!")),
+        const SnackBar(
+          content: Text("Cart is empty , select items to order...."),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     final waiterName = prefs.getString("wname") ?? "Unknown";
-
     int kottype = _determineKotType(cartProvider);
 
     List<Map<String, dynamic>> orderItems = selectedItems.map((item) {
@@ -63,7 +63,7 @@ class CartViewModel {
 
       _handleOrderResponse(response, cartProvider);
     } catch (e) {
-      debugPrint("Error placing order: $e");
+      // debugPrint("Error placing order: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -76,7 +76,10 @@ class CartViewModel {
 
     if (selectedItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cart is empty!")),
+        const SnackBar(
+          content: Text("Cart is empty , select items to order...."),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -153,7 +156,8 @@ class CartViewModel {
           .toStringAsFixed(2)),
       "gst": item['gst'],
       "cess": item['cess'],
-      "itcomment": "",
+      //  "itcomment": "",
+      "itcomment": cartProvider.getItemComment(item['id']),
       "isdiscountable": 0,
       "id": "",
       "shopid": responseData[0]['shopid'],
@@ -203,13 +207,19 @@ class CartViewModel {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Order placed successfully!")),
+        const SnackBar(
+          content: Text("Order placed successfully!"),
+          backgroundColor: Colors.green,
+        ),
       );
       cartProvider.clearCart();
       _navigateToDashboard();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to place order: ${response.body}")),
+        SnackBar(
+          content: Text("Failed to place order: ${response.body}"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

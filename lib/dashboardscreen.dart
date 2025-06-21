@@ -1,834 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-// import 'package:provider/provider.dart';
-// import 'package:responsive_sizer/responsive_sizer.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:waiter_app/cartprovider.dart';
-// import 'package:waiter_app/cartscreen.dart';
-// import 'package:waiter_app/homeScreen.dart';
-// import 'package:waiter_app/utils/apphelper.dart';
-// import 'package:waiter_app/utils/appstring.dart';
-
-// class DashBoardScreen extends StatefulWidget {
-//   final List<dynamic> responseData;
-//   final Map<int, int> itemCounts;
-//   final List<Map<String, dynamic>> menuItems;
-//   final String? selectedOption;
-
-//   const DashBoardScreen({
-//     Key? key,
-//     required this.responseData,
-//     required this.itemCounts,
-//     required this.menuItems,
-//     required this.selectedOption,
-//   }) : super(key: key);
-
-//   @override
-//   _DashBoardScreenState createState() => _DashBoardScreenState();
-// }
-
-// class _DashBoardScreenState extends State<DashBoardScreen> {
-//   int _currentIndex = 0;
-//   late List<Widget> _screens;
-//   FlutterBluePlus flutterBlue = FlutterBluePlus();
-//   List<BluetoothDevice> devicesList = [];
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _screens = [
-//       HomeScreen(responseData: widget.responseData),
-//       Container(), // Empty container for Category to make it unclickable
-//       CartScreen(
-//         responseData: widget.responseData,
-//         itemCounts: widget.itemCounts,
-//         menuItems: widget.menuItems,
-//         selectedOption: widget.selectedOption,
-//       ),
-//     ];
-
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       Provider.of<CartProvider>(context, listen: false)
-//           .setSelectedOption(widget.selectedOption ?? "None");
-//       _checkPrinterPreference();
-//     });
-//   }
-
-//   void _checkPrinterPreference() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     String? printerType = prefs.getString('printerType');
-
-//     if (printerType == null) {
-//       _showPrinterSelectionDialog();
-//     } else {
-//       Apphelper.printerType = printerType!;
-//       if (Apphelper.printerType == Appstring.bluetoothPrinter) {
-//         if (Apphelper.connectedDevice == null) {
-//           scanForDevices();
-//         }
-//       }
-//     }
-//   }
-
-//   Future<void> scanForDevices() async {
-//     setState(() {
-//       devicesList.clear();
-//     });
-
-//     FlutterBluePlus.startScan(timeout: Duration(seconds: 5));
-//     await FlutterBluePlus.scanResults.listen((results) {
-//       for (var result in results) {
-//         if (!devicesList.contains(result.device)) {
-//           setState(() {
-//             devicesList.add(result.device);
-//           });
-//         }
-//       }
-//     });
-//     if (devicesList.isNotEmpty) {
-//       print("object devicesList ${devicesList.length}");
-//       _showselectprint();
-//     }
-//   }
-
-//   void _showPrinterSelectionDialog() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) {
-//         return AlertDialog(
-//           title: Text("Please select your printer"),
-//           content: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               ListTile(
-//                 title: Text("USB Printer"),
-//                 leading: Icon(Icons.usb),
-//                 onTap: () => _savePrinterPreference(Appstring.uSBPrinter),
-//               ),
-//               ListTile(
-//                 title: Text("Bluetooth Printer"),
-//                 leading: Icon(Icons.bluetooth),
-//                 onTap: () => _savePrinterPreference(Appstring.bluetoothPrinter),
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
-
-//   void _showselectprint() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) {
-//         return AlertDialog(
-//           title: Text("Please select your printer"),
-//           content: ListView.builder(
-//             itemCount: devicesList.length,
-//             itemBuilder: (context, index) {
-//               return ListTile(
-//                 title: Text(devicesList[index].name.isNotEmpty
-//                     ? devicesList[index].name
-//                     : "Unknown"),
-//                 subtitle: Text(devicesList[index].id.toString()),
-//                 onTap: () => connectToPrinter(devicesList[index]),
-//               );
-//             },
-//           ),
-//         );
-//       },
-//     );
-//   }
-
-//   Future<void> connectToPrinter(BluetoothDevice device) async {
-//     try {
-//       await device.connect();
-//       setState(() {
-//         Apphelper.connectedDevice = device;
-//       });
-//       Navigator.of(context).pop();
-//       print("Connected to ${device.name}");
-//     } catch (e) {
-//       Navigator.of(context).pop();
-//       print("Error connecting to device: $e");
-//     }
-//   }
-
-//   /// Disconnect printer
-//   Future<void> disconnectPrinter() async {
-//     if (Apphelper.connectedDevice != null) {
-//       await Apphelper.connectedDevice!.disconnect();
-//       setState(() {
-//         Apphelper.connectedDevice = null;
-//       });
-//       print("Printer disconnected.");
-//     }
-//   }
-
-//   void _savePrinterPreference(String printerType) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setString('printerType', printerType);
-//     Apphelper.printerType = printerType;
-//     Navigator.of(context).pop(); // Close dialog
-//     if (printerType == Appstring.bluetoothPrinter) {
-//       scanForDevices();
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: _screens[_currentIndex],
-//       bottomNavigationBar: Consumer<CartProvider>(
-//         builder: (context, cartProvider, child) {
-//           return ClipRRect(
-//             borderRadius: BorderRadius.only(
-//                 topLeft: Radius.circular(10), topRight: Radius.circular(20.0)),
-//             child: BottomNavigationBar(
-//               currentIndex: _currentIndex,
-//               onTap: (index) {
-//                 if (index != 1) {
-//                   setState(() {
-//                     _currentIndex = index;
-//                   });
-//                 }
-//               },
-//               backgroundColor: Colors.white,
-//               selectedItemColor: Color(0xFFFFB300),
-//               unselectedItemColor: Colors.black,
-//               items: [
-//                 BottomNavigationBarItem(
-//                   icon: Icon(Icons.home),
-//                   label: 'Home',
-//                 ),
-//                 BottomNavigationBarItem(
-//                   icon: Icon(Icons.category,
-//                       color: Colors.grey), // Disabled category icon
-//                   label: 'Category',
-//                 ),
-//                 BottomNavigationBarItem(
-//                   icon: Stack(
-//                     clipBehavior: Clip.none,
-//                     children: [
-//                       Icon(Icons.shopping_cart),
-//                       if (cartProvider.totalItemsCount > 0)
-//                         Positioned(
-//                           right: -8,
-//                           top: -8,
-//                           child: Container(
-//                             padding: const EdgeInsets.all(4),
-//                             decoration: const BoxDecoration(
-//                               color: Colors.red,
-//                               shape: BoxShape.circle,
-//                             ),
-//                             constraints: BoxConstraints(
-//                               minWidth: 2.w,
-//                               minHeight: 2.h,
-//                             ),
-//                             child: Text(
-//                               cartProvider.totalItemsCount.toString(),
-//                               style: TextStyle(
-//                                 color: Colors.white,
-//                                 fontSize: 14.sp,
-//                                 fontWeight: FontWeight.bold,
-//                               ),
-//                               textAlign: TextAlign.center,
-//                             ),
-//                           ),
-//                         ),
-//                     ],
-//                   ),
-//                   label: 'Cart',
-//                 ),
-//               ],
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-
-//today
-
-// import 'dart:async';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-// import 'package:provider/provider.dart';
-// import 'package:responsive_sizer/responsive_sizer.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:waiter_app/api_services/api_service.dart';
-// import 'package:waiter_app/cartprovider.dart';
-// import 'package:waiter_app/cartscreen.dart';
-// import 'package:waiter_app/homeScreen.dart';
-// import 'package:waiter_app/providers/notification_provider.dart';
-// import 'package:waiter_app/utils/apphelper.dart';
-// import 'package:waiter_app/utils/appstring.dart';
-
-// class DashBoardScreen extends StatefulWidget {
-//   final List<dynamic> responseData;
-//   final Map<int, int> itemCounts;
-//   final List<Map<String, dynamic>> menuItems;
-//   final String? selectedOption;
-
-//   const DashBoardScreen({
-//     Key? key,
-//     required this.responseData,
-//     required this.itemCounts,
-//     required this.menuItems,
-//     required this.selectedOption,
-//   }) : super(key: key);
-
-//   @override
-//   _DashBoardScreenState createState() => _DashBoardScreenState();
-// }
-
-// class _DashBoardScreenState extends State<DashBoardScreen> {
-//   int _currentIndex = 0;
-//   late List<Widget> _screens;
-//   FlutterBluePlus flutterBlue = FlutterBluePlus();
-//   List<BluetoothDevice> devicesList = [];
-//   ApiService _apiService = ApiService(); // Instance of ApiService
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _screens = [
-//       HomeScreen(responseData: widget.responseData),
-//       Container(), // Empty container for Category to make it unclickable
-//       CartScreen(
-//         responseData: widget.responseData,
-//         itemCounts: widget.itemCounts,
-//         menuItems: widget.menuItems,
-//         selectedOption: widget.selectedOption,
-//       ),
-//     ];
-
-//     WidgetsBinding.instance.addPostFrameCallback((_) async {
-//       Provider.of<CartProvider>(context, listen: false)
-//           .setSelectedOption(widget.selectedOption ?? "None");
-
-//       // Initialize notifications
-//       await Provider.of<NotificationProvider>(context, listen: false)
-//           .initializeNotifications();
-
-//       _checkPrinterPreference();
-
-//       // Start the notification polling
-//       Timer.periodic(Duration(seconds: 6), (timer) {
-//         _startNotificationPolling();
-//       });
-//     });
-//   }
-
-//   // void initState() {
-//   //   super.initState();
-//   //   _screens = [
-//   //     HomeScreen(responseData: widget.responseData),
-//   //     Container(), // Empty container for Category to make it unclickable
-//   //     CartScreen(
-//   //       responseData: widget.responseData,
-//   //       itemCounts: widget.itemCounts,
-//   //       menuItems: widget.menuItems,
-//   //       selectedOption: widget.selectedOption,
-//   //     ),
-//   //   ];
-
-//   //   WidgetsBinding.instance.addPostFrameCallback((_) {
-//   //     Provider.of<CartProvider>(context, listen: false)
-//   //         .setSelectedOption(widget.selectedOption ?? "None");
-//   //     _checkPrinterPreference();
-
-//   //     // Start the notification polling
-
-//   //     Timer.periodic(Duration(seconds: 6), (timer) {
-//   //       _startNotificationPolling();
-//   //     });
-//   //     // _startNotificationPolling();
-//   //   });
-//   // }
-
-//   void _checkPrinterPreference() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     String? printerType = prefs.getString('printerType');
-
-//     if (printerType == null) {
-//       _showPrinterSelectionDialog();
-//     } else {
-//       Apphelper.printerType = printerType!;
-//       if (Apphelper.printerType == Appstring.bluetoothPrinter) {
-//         if (Apphelper.connectedDevice == null) {
-//           scanForDevices();
-//         }
-//       }
-//     }
-//   }
-
-//   Future<void> scanForDevices() async {
-//     setState(() {
-//       devicesList.clear();
-//     });
-
-//     FlutterBluePlus.startScan(timeout: Duration(seconds: 5));
-//     await FlutterBluePlus.scanResults.listen((results) {
-//       for (var result in results) {
-//         if (!devicesList.contains(result.device)) {
-//           setState(() {
-//             devicesList.add(result.device);
-//           });
-//         }
-//       }
-//     });
-//     if (devicesList.isNotEmpty) {
-//       print("object devicesList ${devicesList.length}");
-//       _showselectprint();
-//     }
-//   }
-
-//   void _showPrinterSelectionDialog() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) {
-//         return AlertDialog(
-//           title: Text("Please select your printer"),
-//           content: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               ListTile(
-//                 title: Text("USB Printer"),
-//                 leading: Icon(Icons.usb),
-//                 onTap: () => _savePrinterPreference(Appstring.uSBPrinter),
-//               ),
-//               ListTile(
-//                 title: Text("Bluetooth Printer"),
-//                 leading: Icon(Icons.bluetooth),
-//                 onTap: () => _savePrinterPreference(Appstring.bluetoothPrinter),
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
-
-//   void _showselectprint() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) {
-//         return AlertDialog(
-//           title: Text("Please select your printer"),
-//           content: ListView.builder(
-//             itemCount: devicesList.length,
-//             itemBuilder: (context, index) {
-//               return ListTile(
-//                 title: Text(devicesList[index].name.isNotEmpty
-//                     ? devicesList[index].name
-//                     : "Unknown"),
-//                 subtitle: Text(devicesList[index].id.toString()),
-//                 onTap: () => connectToPrinter(devicesList[index]),
-//               );
-//             },
-//           ),
-//         );
-//       },
-//     );
-//   }
-
-//   Future<void> connectToPrinter(BluetoothDevice device) async {
-//     try {
-//       await device.connect();
-//       setState(() {
-//         Apphelper.connectedDevice = device;
-//       });
-//       Navigator.of(context).pop();
-//       print("Connected to ${device.name}");
-//     } catch (e) {
-//       Navigator.of(context).pop();
-//       print("Error connecting to device: $e");
-//     }
-//   }
-
-//   /// Disconnect printer
-//   Future<void> disconnectPrinter() async {
-//     if (Apphelper.connectedDevice != null) {
-//       await Apphelper.connectedDevice!.disconnect();
-//       setState(() {
-//         Apphelper.connectedDevice = null;
-//       });
-//       print("Printer disconnected.");
-//     }
-//   }
-
-//   void _savePrinterPreference(String printerType) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setString('printerType', printerType);
-//     Apphelper.printerType = printerType;
-//     Navigator.of(context).pop(); // Close dialog
-//     if (printerType == Appstring.bluetoothPrinter) {
-//       scanForDevices();
-//     }
-//   }
-
-//   // Start the notification polling
-//   void _startNotificationPolling() {
-//     final prefs = SharedPreferences.getInstance();
-//     prefs.then((sharedPrefs) {
-//       int shopId = sharedPrefs.getInt('wcode') ?? 0;
-//       int wid = sharedPrefs.getInt("wid") ?? 0;
-//       // print("object wid $wid");
-//       // print(shopId.toString());
-
-//       if (shopId > 0 && wid > 0) {
-//         // print("object start");
-//         // _apiService.startNotificationPolling(context, shopid, wid);
-//         _apiService.startNotificationPolling(context);
-//       }
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: _screens[_currentIndex],
-//       bottomNavigationBar: Consumer<CartProvider>(
-//         builder: (context, cartProvider, child) {
-//           return ClipRRect(
-//             borderRadius: BorderRadius.only(
-//                 topLeft: Radius.circular(10), topRight: Radius.circular(20.0)),
-//             child: BottomNavigationBar(
-//               currentIndex: _currentIndex,
-//               onTap: (index) {
-//                 if (index != 1) {
-//                   setState(() {
-//                     _currentIndex = index;
-//                   });
-//                 }
-//               },
-//               backgroundColor: Colors.white,
-//               selectedItemColor: Color(0xFFFFB300),
-//               unselectedItemColor: Colors.black,
-//               items: [
-//                 BottomNavigationBarItem(
-//                   icon: Icon(Icons.home),
-//                   label: 'Home',
-//                 ),
-//                 BottomNavigationBarItem(
-//                   icon: Icon(Icons.category,
-//                       color: Colors.grey), // Disabled category icon
-//                   label: 'Category',
-//                 ),
-//                 BottomNavigationBarItem(
-//                   icon: Stack(
-//                     clipBehavior: Clip.none,
-//                     children: [
-//                       Icon(Icons.shopping_cart),
-//                       if (cartProvider.totalItemsCount > 0)
-//                         Positioned(
-//                           right: -8,
-//                           top: -8,
-//                           child: Container(
-//                             padding: const EdgeInsets.all(4),
-//                             decoration: const BoxDecoration(
-//                               color: Colors.red,
-//                               shape: BoxShape.circle,
-//                             ),
-//                             constraints: BoxConstraints(
-//                               minWidth: 2.w,
-//                               minHeight: 2.h,
-//                             ),
-//                             child: Text(
-//                               cartProvider.totalItemsCount.toString(),
-//                               style: TextStyle(
-//                                 color: Colors.white,
-//                                 fontSize: 14.sp,
-//                                 fontWeight: FontWeight.bold,
-//                               ),
-//                               textAlign: TextAlign.center,
-//                             ),
-//                           ),
-//                         ),
-//                     ],
-//                   ),
-//                   label: 'Cart',
-//                 ),
-//               ],
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-
-// ssssssccscc
-
-// import 'dart:async';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-// import 'package:provider/provider.dart';
-// import 'package:responsive_sizer/responsive_sizer.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:waiter_app/api_services/api_service.dart';
-// import 'package:waiter_app/cartscreen.dart';
-// import 'package:waiter_app/homeScreen.dart';
-// import 'package:waiter_app/providers/cartprovider.dart';
-// import 'package:waiter_app/providers/notification_provider.dart';
-// import 'package:waiter_app/utils/apphelper.dart';
-// import 'package:waiter_app/utils/appstring.dart';
-
-// class DashBoardScreen extends StatefulWidget {
-//   final List<dynamic> responseData;
-//   final Map<int, int> itemCounts;
-//   final List<Map<String, dynamic>> menuItems;
-//   final String? selectedOption;
-
-//   const DashBoardScreen({
-//     Key? key,
-//     required this.responseData,
-//     required this.itemCounts,
-//     required this.menuItems,
-//     required this.selectedOption,
-//   }) : super(key: key);
-
-//   @override
-//   _DashBoardScreenState createState() => _DashBoardScreenState();
-// }
-
-// class _DashBoardScreenState extends State<DashBoardScreen> {
-//   int _currentIndex = 0;
-//   late List<Widget> _screens;
-//   FlutterBluePlus flutterBlue = FlutterBluePlus();
-//   List<BluetoothDevice> devicesList = [];
-//   ApiService _apiService = ApiService();
-//   Timer? _pollingTimer;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _screens = [
-//       HomeScreen(responseData: widget.responseData),
-//       Container(), // Disabled Category screen
-//       CartScreen(
-//         responseData: widget.responseData,
-//         itemCounts: widget.itemCounts,
-//         menuItems: widget.menuItems,
-//         selectedOption: widget.selectedOption,
-//       ),
-//     ];
-
-//     WidgetsBinding.instance.addPostFrameCallback((_) async {
-//       Provider.of<CartProvider>(context, listen: false)
-//           .setSelectedOption(widget.selectedOption ?? "None");
-
-//       await Provider.of<NotificationProvider>(context, listen: false)
-//           .initializeNotifications();
-
-//       _checkPrinterPreference();
-
-//       _startNotificationPolling();
-//     });
-//   }
-
-//   void _startNotificationPolling() {
-//     _pollingTimer?.cancel(); // Cancel previous timers if any
-
-//     _pollingTimer = Timer.periodic(Duration(seconds: 6), (timer) async {
-//       final prefs = await SharedPreferences.getInstance();
-//       int shopId = prefs.getInt('wcode') ?? 0;
-//       int wid = prefs.getInt("wid") ?? 0;
-//       if (shopId > 0 && wid > 0) {
-//         _apiService.startNotificationPolling(context);
-//       }
-//     });
-//   }
-
-//   void _stopNotificationPolling() {
-//     _pollingTimer?.cancel();
-//     _pollingTimer = null;
-//   }
-
-//   void _checkPrinterPreference() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     String? printerType = prefs.getString('printerType');
-//     if (printerType == null) {
-//       _showPrinterSelectionDialog();
-//     } else {
-//       Apphelper.printerType = printerType;
-//       if (printerType == Appstring.bluetoothPrinter &&
-//           Apphelper.connectedDevice == null) {
-//         scanForDevices();
-//       }
-//     }
-//   }
-
-//   Future<void> scanForDevices() async {
-//     devicesList.clear();
-//     FlutterBluePlus.startScan(timeout: Duration(seconds: 5));
-//     FlutterBluePlus.scanResults.listen((results) {
-//       for (var result in results) {
-//         if (!devicesList.contains(result.device)) {
-//           setState(() {
-//             devicesList.add(result.device);
-//           });
-//         }
-//       }
-//     });
-//     if (devicesList.isNotEmpty) {
-//       _showselectprint();
-//     }
-//   }
-
-//   void _showPrinterSelectionDialog() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) => AlertDialog(
-//         title: Text("Please select your printer"),
-//         content: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             ListTile(
-//               title: Text("USB Printer"),
-//               leading: Icon(Icons.usb),
-//               onTap: () => _savePrinterPreference(Appstring.uSBPrinter),
-//             ),
-//             ListTile(
-//               title: Text("Bluetooth Printer"),
-//               leading: Icon(Icons.bluetooth),
-//               onTap: () => _savePrinterPreference(Appstring.bluetoothPrinter),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _showselectprint() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) => AlertDialog(
-//         title: Text("Please select your printer"),
-//         content: ListView.builder(
-//           itemCount: devicesList.length,
-//           itemBuilder: (context, index) {
-//             return ListTile(
-//               title: Text(devicesList[index].name.isNotEmpty
-//                   ? devicesList[index].name
-//                   : "Unknown"),
-//               subtitle: Text(devicesList[index].id.toString()),
-//               onTap: () => connectToPrinter(devicesList[index]),
-//             );
-//           },
-//         ),
-//       ),
-//     );
-//   }
-
-//   Future<void> connectToPrinter(BluetoothDevice device) async {
-//     try {
-//       await device.connect();
-//       setState(() {
-//         Apphelper.connectedDevice = device;
-//       });
-//       Navigator.of(context).pop();
-//     } catch (e) {
-//       Navigator.of(context).pop();
-//       print("Error connecting to printer: $e");
-//     }
-//   }
-
-//   void _savePrinterPreference(String printerType) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setString('printerType', printerType);
-//     Apphelper.printerType = printerType;
-//     Navigator.of(context).pop();
-//     if (printerType == Appstring.bluetoothPrinter) {
-//       scanForDevices();
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: _screens[_currentIndex],
-//       bottomNavigationBar: Consumer<CartProvider>(
-//         builder: (context, cartProvider, child) {
-//           return ClipRRect(
-//             borderRadius: BorderRadius.only(
-//               topLeft: Radius.circular(10),
-//               topRight: Radius.circular(20.0),
-//             ),
-//             child: BottomNavigationBar(
-//               currentIndex: _currentIndex,
-//               onTap: (index) {
-//                 if (index != 1) {
-//                   setState(() {
-//                     _currentIndex = index;
-//                   });
-//                 }
-//               },
-//               backgroundColor: Colors.white,
-//               selectedItemColor: Color(0xFFFFB300),
-//               unselectedItemColor: Colors.black,
-//               items: [
-//                 BottomNavigationBarItem(
-//                   icon: Icon(Icons.home),
-//                   label: 'Home',
-//                 ),
-//                 BottomNavigationBarItem(
-//                   icon: Icon(Icons.category, color: Colors.grey),
-//                   label: 'Category',
-//                 ),
-//                 BottomNavigationBarItem(
-//                   icon: Stack(
-//                     clipBehavior: Clip.none,
-//                     children: [
-//                       Icon(Icons.shopping_cart),
-//                       if (cartProvider.totalItemsCount > 0)
-//                         Positioned(
-//                           right: -8,
-//                           top: -8,
-//                           child: Container(
-//                             padding: const EdgeInsets.all(4),
-//                             decoration: const BoxDecoration(
-//                               color: Colors.red,
-//                               shape: BoxShape.circle,
-//                             ),
-//                             constraints: BoxConstraints(
-//                               minWidth: 2.w,
-//                               minHeight: 2.h,
-//                             ),
-//                             child: Text(
-//                               cartProvider.totalItemsCount.toString(),
-//                               style: TextStyle(
-//                                 color: Colors.white,
-//                                 fontSize: 14.sp,
-//                                 fontWeight: FontWeight.bold,
-//                               ),
-//                               textAlign: TextAlign.center,
-//                             ),
-//                           ),
-//                         ),
-//                     ],
-//                   ),
-//                   label: 'Cart',
-//                 ),
-//               ],
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-
-// new code
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -837,11 +6,12 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:waiter_app/api_services/api_service.dart';
 import 'package:waiter_app/cartscreen.dart';
-import 'package:waiter_app/homeScreen.dart';
 import 'package:waiter_app/providers/cartprovider.dart';
 import 'package:waiter_app/providers/notification_provider.dart';
 import 'package:waiter_app/utils/apphelper.dart';
 import 'package:waiter_app/utils/appstring.dart';
+import 'package:waiter_app/utils/dialogs.dart';
+import 'package:waiter_app/view/homeScreen.dart';
 
 class DashBoardScreen extends StatefulWidget {
   final List<dynamic> responseData;
@@ -870,6 +40,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   Timer? _pollingTimer;
   StreamSubscription<List<ScanResult>>? _scanSubscription;
   bool _isScanning = false;
+  bool _printerDialogShown = false; // Track if dialog has been shown
 
   @override
   void initState() {
@@ -893,7 +64,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           .initializeNotifications();
 
       _checkPrinterPreference();
-
       _startNotificationPolling();
     });
   }
@@ -924,6 +94,8 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   }
 
   void _checkPrinterPreference() async {
+    if (_printerDialogShown) return; // Don't show if already shown
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? printerType = prefs.getString('printerType');
     if (printerType == null) {
@@ -942,14 +114,16 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
       // Check if Bluetooth is available
       bool isAvailable = await FlutterBluePlus.isAvailable;
       if (!isAvailable) {
-        _showErrorDialog("Bluetooth is not available on this device");
         return;
       }
 
       // Check if Bluetooth is on
       bool isOn = await FlutterBluePlus.isOn;
       if (!isOn) {
-        _showErrorDialog("Please turn on Bluetooth to scan for devices");
+        await showCustomErrorDialog(
+          context: context,
+          message: "Please turn on Bluetooth to scan for devices",
+        );
         return;
       }
 
@@ -1003,9 +177,11 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   }
 
   void _showPrinterSelectionDialog() {
+    _printerDialogShown = true; // Mark dialog as shown
+
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Allow dismissing by tapping outside
       builder: (context) => AlertDialog(
         title: Text("Select Printer Type"),
         content: Column(
@@ -1014,7 +190,10 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
             ListTile(
               title: Text("USB Printer"),
               leading: Icon(Icons.usb),
-              onTap: () => _savePrinterPreference(Appstring.uSBPrinter),
+              onTap: () {
+                _savePrinterPreference(Appstring.uSBPrinter);
+                Navigator.pop(context);
+              },
             ),
             ListTile(
               title: Text("Bluetooth Printer"),
@@ -1028,13 +207,16 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           ],
         ),
       ),
-    );
+    ).then((_) {
+      // This runs when the dialog is dismissed (either by tap or outside tap)
+      _printerDialogShown = false;
+    });
   }
 
   void _showDeviceSelectionDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true, // Allow dismissing by tapping outside
       builder: (context) => AlertDialog(
         title: Text("Select Bluetooth Printer"),
         content: Container(
@@ -1131,7 +313,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  // Text("Scanning for Bluetooth printers..."),
                 ],
               ),
             ),

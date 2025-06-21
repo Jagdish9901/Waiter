@@ -83,123 +83,102 @@ class NotificationScreen extends StatelessWidget {
               );
             }
 
-            return RefreshIndicator(
-              color: const Color(0xFFFFB300),
-              onRefresh: () async {
-                // Add your refresh logic here if needed
-                await Future.delayed(const Duration(seconds: 1));
-              },
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: provider.notifications.length,
-                itemBuilder: (context, index) {
-                  final notification = provider.notifications[index];
-                  return Dismissible(
-                    key: Key(notification.orderNo),
-                    direction: DismissDirection.endToStart,
-                    onDismissed: (direction) {
-                      provider.removeNotification(index);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "Notification for order #${notification.orderNo} removed"),
-                          backgroundColor: Colors.black,
-                        ),
-                      );
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: provider.notifications.length,
+              itemBuilder: (context, index) {
+                final notification = provider.notifications[index];
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                  margin: EdgeInsets.zero,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      provider.markAsRead(index);
+                      // Optional: Add navigation to order details
                     },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                      margin: EdgeInsets.zero,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          provider.markAsRead(index);
-                          // Optional: Add navigation to order details
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10.w,
+                            height: 5.h,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              notification.isRead
+                                  ? Icons.check_circle_outline
+                                  : Icons.check_circle_outline,
+                              color: notification.isRead
+                                  ? Colors.grey.shade600
+                                  : Colors.green,
+                              size: 24.sp,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Order #${notification.orderNo} Ready',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: notification.isRead
+                                        ? Colors.grey.shade600
+                                        : Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Table: ${notification.tableName}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: notification.isRead
+                                        ? Colors.grey.shade500
+                                        : Colors.grey.shade800,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
+                            ),
+                          ),
+                          Column(
                             children: [
-                              Container(
-                                width: 10.w,
-                                height: 5.h,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  notification.isRead
-                                      ? Icons.check_circle_outline
-                                      : Icons.check_circle_outline,
-                                  color: notification.isRead
-                                      ? Colors.grey.shade600
-                                      : Colors.green,
-                                  size: 24.sp,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Order #${notification.orderNo} Ready',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: notification.isRead
-                                            ? Colors.grey.shade600
-                                            : Colors.black,
-                                      ),
+                              const SizedBox(height: 8),
+                              if (!notification.isRead)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade100,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    'NEW',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.green.shade800,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Table: ${notification.tableName}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: notification.isRead
-                                            ? Colors.grey.shade500
-                                            : Colors.grey.shade800,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              Column(
-                                children: [
-                                  const SizedBox(height: 8),
-                                  if (!notification.isRead)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.shade100,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        'NEW',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.green.shade800,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
                             ],
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                  );
-                },
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-              ),
+                  ),
+                );
+              },
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
             );
           },
         ),

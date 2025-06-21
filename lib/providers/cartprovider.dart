@@ -1,18 +1,21 @@
 import 'dart:convert'; // Import for jsonEncode/Decode
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CartProvider with ChangeNotifier {
   List<Map<String, dynamic>> _cartItems = [];
   Map<int, int> _itemCounts = {}; // Stores item IDs and their quantities
-  String? _selectedOption; // Stores selected option (Delivery, Takeaway, Table)
-  String _selectedTableName = ""; // Stores selected table name (default empty)
-  int? _selectedTableId; // Stores selected table ID
+  Map<int, String> _itemComments = {}; // Stores item-specific comments
+
+  String? _selectedOption;
+  String _selectedTableName = '';
+  int? _selectedTableId;
 
   // --- SharedPreferences Keys ---
   static const String _cartItemsKey = 'cartItems';
   static const String _itemCountsKey = 'itemCounts';
+  static const String _itemCommentsKey = 'itemComments';
   static const String _selectedOptionKey = 'selectedOption';
   static const String _selectedTableNameKey = 'selectedTableName';
   static const String _selectedTableIdKey = 'selectedTableId';
@@ -21,44 +24,56 @@ class CartProvider with ChangeNotifier {
   List<Map<String, dynamic>> get cartItems => _cartItems;
   Map<int, int> get itemCounts => _itemCounts;
   String? get selectedOption => _selectedOption;
-  String get selectedTableName =>
-      _selectedTableName; // Return empty string if null
+  String get selectedTableName => _selectedTableName;
   int? get selectedTableId => _selectedTableId;
-
   int get totalItemsCount =>
       _itemCounts.values.fold(0, (sum, count) => sum + count);
 
-  // --- Initialization ---
-  // Call this method when your app starts, before accessing the provider
-  Future<void> init() async {
-    await _loadCart();
-    log('CartProvider initialized and loaded from storage.');
+  // Get comment for a specific item
+  String getItemComment(int itemId) {
+    return _itemComments[itemId] ?? '';
   }
 
-  // --- Cart Modification Methods ---
+  // Set comment for a specific item
+  Future<void> setItemComment(int itemId, String comment) async {
+    _itemComments[itemId] = comment;
+    await _saveCart();
+    notifyListeners();
+  }
+
+  // --- Initialization ---
+  Future<void> init() async {
+    await _loadCart();
+    log('CartProvider initialized.');
+  }
+
+  // --- Cart Modification ---
   Future<void> addToCart(Map<String, dynamic> item) async {
-    int itemId = item['id'];
-    if (_itemCounts.containsKey(itemId)) {
-      _itemCounts[itemId] = _itemCounts[itemId]! + 1;
-    } else {
-      _itemCounts[itemId] = 1;
-      // Only add the item details if it's the first time
+    final int itemId = item['id'];
+
+    _itemCounts[itemId] = (_itemCounts[itemId] ?? 0) + 1;
+
+    if (!_cartItems.any((element) => element['id'] == itemId)) {
       _cartItems.add(item);
     }
-    await _saveCart(); // Save after modification
+
+    await _saveCart();
     notifyListeners();
   }
 
   Future<void> removeFromCart(Map<String, dynamic> item) async {
-    int itemId = item['id'];
+    final int itemId = item['id'];
+
     if (_itemCounts.containsKey(itemId)) {
       if (_itemCounts[itemId]! > 1) {
         _itemCounts[itemId] = _itemCounts[itemId]! - 1;
       } else {
         _itemCounts.remove(itemId);
-        _cartItems.removeWhere((cartItem) => cartItem['id'] == itemId);
+        _cartItems.removeWhere((element) => element['id'] == itemId);
+        _itemComments.remove(itemId); // Also remove the comment
       }
-      await _saveCart(); // Save after modification
+
+      await _saveCart();
       notifyListeners();
     }
   }
@@ -66,54 +81,63 @@ class CartProvider with ChangeNotifier {
   Future<void> clearCart() async {
     _cartItems.clear();
     _itemCounts.clear();
+    _itemComments.clear();
     _selectedOption = null;
-    _selectedTableName = ''; // Reset table name
+    _selectedTableName = '';
     _selectedTableId = null;
-    await _saveCart(); // Save after clearing
+
+    await _saveCart();
     notifyListeners();
   }
 
-  // --- Option/Table Setting Methods ---
+  // --- Option/Table Selection ---
   Future<void> setSelectedOption(String option) async {
     _selectedOption = option;
+
     if (option != "Table") {
-      _selectedTableName =
-          ""; // Clear table name if switching away from "Table"
+      _selectedTableName = '';
       _selectedTableId = null;
     }
-    await _saveCart(); // Save after modification
+
+    await _saveCart();
     notifyListeners();
   }
 
   Future<void> setSelectedTable(int tableId, String tableName) async {
     _selectedTableId = tableId;
     _selectedTableName = tableName;
-    _selectedOption = "Table"; // Ensure option is set to "Table"
-    await _saveCart(); // Save after modification
+    _selectedOption = "Table";
+
+    await _saveCart();
     notifyListeners();
   }
 
-  // --- Persistence Logic (Private) ---
-
+  // --- Persistence ---
   Future<void> _saveCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Serialize cartItems list to JSON string
+      // Save cart items
       final String encodedCartItems = jsonEncode(_cartItems);
       await prefs.setString(_cartItemsKey, encodedCartItems);
 
-      // Serialize itemCounts map to JSON string (convert int keys to String)
+      // Save item counts
       final Map<String, int> stringKeyItemCounts =
           _itemCounts.map((key, value) => MapEntry(key.toString(), value));
       final String encodedItemCounts = jsonEncode(stringKeyItemCounts);
       await prefs.setString(_itemCountsKey, encodedItemCounts);
 
-      // Save other simple values
+      // Save item comments
+      final Map<String, String> stringKeyItemComments =
+          _itemComments.map((key, value) => MapEntry(key.toString(), value));
+      final String encodedItemComments = jsonEncode(stringKeyItemComments);
+      await prefs.setString(_itemCommentsKey, encodedItemComments);
+
+      // Save options
       if (_selectedOption != null) {
         await prefs.setString(_selectedOptionKey, _selectedOption!);
       } else {
-        await prefs.remove(_selectedOptionKey); // Remove if null
+        await prefs.remove(_selectedOptionKey);
       }
 
       await prefs.setString(_selectedTableNameKey, _selectedTableName);
@@ -121,12 +145,12 @@ class CartProvider with ChangeNotifier {
       if (_selectedTableId != null) {
         await prefs.setInt(_selectedTableIdKey, _selectedTableId!);
       } else {
-        await prefs.remove(_selectedTableIdKey); // Remove if null
+        await prefs.remove(_selectedTableIdKey);
       }
+
       log('Cart saved successfully.');
     } catch (e) {
       log('Error saving cart: $e');
-      // Handle saving error (e.g., show a message to the user)
     }
   }
 
@@ -134,49 +158,51 @@ class CartProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Load and deserialize cartItems
+      // Load cart items
       final String? encodedCartItems = prefs.getString(_cartItemsKey);
-      if (encodedCartItems != null && encodedCartItems.isNotEmpty) {
-        final List<dynamic> decodedCartItems = jsonDecode(encodedCartItems);
-        // Ensure correct type after decoding
-        _cartItems = decodedCartItems
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-        log('Loaded cart items: $_cartItems');
-      } else {
-        _cartItems = []; // Initialize if nothing saved
+      if (encodedCartItems != null) {
+        final List<dynamic> decoded = jsonDecode(encodedCartItems);
+        _cartItems = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
       }
 
-      // Load and deserialize itemCounts
+      // Load item counts
       final String? encodedItemCounts = prefs.getString(_itemCountsKey);
-      if (encodedItemCounts != null && encodedItemCounts.isNotEmpty) {
-        final Map<String, dynamic> decodedStringKeyItemCounts =
-            jsonDecode(encodedItemCounts);
-        // Convert String keys back to int keys
-        _itemCounts = decodedStringKeyItemCounts
-            .map((key, value) => MapEntry(int.parse(key), value as int));
-        log('Loaded item counts: $_itemCounts');
-      } else {
-        _itemCounts = {}; // Initialize if nothing saved
+      if (encodedItemCounts != null) {
+        final Map<String, dynamic> decoded = jsonDecode(encodedItemCounts);
+        _itemCounts =
+            decoded.map((key, value) => MapEntry(int.parse(key), value as int));
       }
 
-      // Load other simple values
-      _selectedOption = prefs.getString(_selectedOptionKey);
-      _selectedTableName = prefs.getString(_selectedTableNameKey) ??
-          ""; // Default to empty string
-      _selectedTableId = prefs.getInt(_selectedTableIdKey); // Can be null
+      // Load item comments
+      final String? encodedItemComments = prefs.getString(_itemCommentsKey);
+      if (encodedItemComments != null) {
+        final Map<String, dynamic> decoded = jsonDecode(encodedItemComments);
+        _itemComments = decoded
+            .map((key, value) => MapEntry(int.parse(key), value as String));
+      } else {
+        _itemComments = {};
+      }
 
-      log('Loaded selectedOption: $_selectedOption');
-      log('Loaded selectedTableName: $_selectedTableName');
-      log('Loaded selectedTableId: $_selectedTableId');
+      // Load options
+      _selectedOption = prefs.getString(_selectedOptionKey);
+      _selectedTableName = prefs.getString(_selectedTableNameKey) ?? '';
+      _selectedTableId = prefs.getInt(_selectedTableIdKey);
+
+      log('Cart loaded: $_cartItems');
+      log('Counts: $_itemCounts');
+      log('Comments: $_itemComments');
+      log('Option: $_selectedOption');
+      log('Table: $_selectedTableName ($_selectedTableId)');
     } catch (e) {
       log('Error loading cart: $e');
       _cartItems = [];
       _itemCounts = {};
+      _itemComments = {};
       _selectedOption = null;
-      _selectedTableName = "";
+      _selectedTableName = '';
       _selectedTableId = null;
-      notifyListeners(); // Notify UI about the cleared state due to error
     }
+
+    notifyListeners();
   }
 }
